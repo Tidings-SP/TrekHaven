@@ -5,14 +5,14 @@ on:
       - master
 jobs:
   build:
-    name: Build
+    name: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
       - name: Install Dependencies
         run: npm install      
-      - name: Build
+      - name: build
         env:
           CI: false        
         run: npm run build
@@ -20,7 +20,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: build
-          path: build
+          path: ./out
   deploy:
     name: Deploy
     needs: build
@@ -32,7 +32,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: build
-          path: build
+          path: ./out
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
