@@ -37,7 +37,7 @@ import { auth } from "../firebase"
 
 type Input = z.infer<typeof passSchema>;
 
-export default function ForgotPassword({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export default function ForgotPassword() {
   const { toast } = useToast()
   const router = useRouter()
   const form = useForm<Input>({

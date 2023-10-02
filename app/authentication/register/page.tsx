@@ -38,7 +38,7 @@ import { signIn } from "next-auth/react"
 
 type Input = z.infer<typeof registerSchema>;
 
-export default function Register({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export default function Register() {
     const { toast } = useToast()
     const router = useRouter()
     const [formStep, setFormStep] = React.useState(0)

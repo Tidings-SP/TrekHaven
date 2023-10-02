@@ -38,7 +38,7 @@ import { auth } from "../firebase"
 
 type Input = z.infer<typeof signinSchema>;
 
-export default function Login({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export default function Login() {
   const { toast } = useToast()
   const router = useRouter()
   const form = useForm<Input>({
