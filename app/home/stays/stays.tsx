@@ -1,7 +1,28 @@
+import Image from "next/image";
+import cardList from "./data"
+import img from "@/assets/imgSample.webp"
+
 export default function Stays() {
   return(
-    <div>
-      Stays
-    </div>
+    <main className="container mx-auto py-8 px-8">
+      <h1 className="text-4xl font-bold pb-3">Find Best Stays!</h1>
+      <div className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-1 gap-6">
+        {cardList.map(card => (
+          <div
+          className="shadow-lg rounded-lg" 
+          key={card.id} >
+            <Image
+            className="rounded-lg"
+            src={img}
+            alt="Picture of the author"></Image>
+            <div className="p-5">
+            <h3 className="text-3xl font-bold mb-3">{card.title}</h3>
+            <p className="text-lg font-normal">{card.text}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
+    
   )
 }

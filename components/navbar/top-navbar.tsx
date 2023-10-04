@@ -4,7 +4,6 @@ import { CgProfile } from "react-icons/cg";
 import {BsSearch} from "react-icons/bs";
 import { ModeToggle } from "../ui/toggle-mode";
 import { Input } from "../ui/input";
-import { MainMenu } from "./main-menu";
 const TopNavBar = () => {
   return (
     <div className="border-b  py-6">

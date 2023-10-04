@@ -69,7 +69,6 @@ export default function ForgotPassword() {
 
   return (
     <main>
-      <ModeToggle className="absolute top-6 right-6" />
       <div className='min-h-screen'>
         <Card className="w-[350px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <CardHeader>
