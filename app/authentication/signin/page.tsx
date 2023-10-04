@@ -58,7 +58,7 @@ export default function Login() {
           {
               title: "Signed-in successfully!",
           });
-        router.push('/') })
+        router.push('/home') })
       .catch((error) => { 
         toast(
           {

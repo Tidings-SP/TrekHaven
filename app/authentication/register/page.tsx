@@ -74,7 +74,7 @@ export default function Register() {
                                 title: "Account created successfully!",
                             }
                         )
-                        router.push('/') })
+                        router.push('/home') })
                     .catch((error) => { 
                         toast(
                             {
