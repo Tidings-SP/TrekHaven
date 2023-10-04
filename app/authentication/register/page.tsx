@@ -34,6 +34,7 @@ import { redirect, useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "../firebase"
 import { signIn } from "next-auth/react"
+import TopNavBar from "@/components/navbar/top-navbar"
 
 
 type Input = z.infer<typeof registerSchema>;
