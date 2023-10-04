@@ -61,3 +61,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+
+  .navbar__link:hover {
+    color: #22c45f;
+    transition: all 0.4s;
+  }
+
+  .navbar__link::after {
+    position: absolute;
+    content: "";
+    background-color: #22c45f;
+    height: 3px;
+    width: 100%;
+    bottom: -5px;
+    left: 0;
+    scale: 0;
+    transform-origin: left;
+    transition: all 0.4s;
+  }
+
+  .navbar__link:hover::after {
+    scale: 1;
+  }
+}

@@ -3,14 +3,13 @@ import React from "react";
 import { CgProfile } from "react-icons/cg";
 import {BsSearch} from "react-icons/bs";
 import { ModeToggle } from "../ui/toggle-mode";
-import styles from "./top-navbar.module.css"
 import { Input } from "../ui/input";
 import { MainMenu } from "./main-menu";
 const TopNavBar = () => {
   return (
     <div className="border-b  py-6">
       <div className="container sm:flex justify-between items-center">
-        <div className="font-bold text-4xl text-center pb-4 sm:pb-0 text-blackish">
+        <div className="font-bold text-4xl text-center pb-4 sm:pb-0">
           TrekHaven
         </div>
 
