@@ -6,12 +6,14 @@ import Register from './authentication/register/page';
 import HomePage from './home/page';
 import Login from './authentication/signin/page';
 import Stays from './home/stays/stays';
+import NewStay from './admin/new-stay/page';
+import SettingsLayout from './admin/new-stay/layout';
 
 
 export default function Home() {
   
   return (
-    <Login/>
+    <HomePage/>
   )
 }
 

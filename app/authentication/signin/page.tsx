@@ -2,11 +2,10 @@
 import * as React from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { registerSchema, signinSchema } from "../../validators/auth-validator"
+import { signinSchema } from "../../validators/auth-validator"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Toaster } from "@/components/ui/toaster"
 import { Button } from "@/components/ui/button"
-import { motion } from "framer-motion"
 import {
   Card,
   CardContent,
@@ -16,23 +15,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { cn } from "@/lib/utils"
-import { useToast } from "@/components/ui/use-toast"
-import { easeInOut } from "framer-motion/dom"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { ModeToggle } from "@/components/ui/toggle-mode"
 import { redirect, useRouter } from 'next/navigation'
-import { signIn } from 'next-auth/react';
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "../firebase"
+import { useToast } from "@/components/ui/use-toast"
 
 
 
@@ -131,6 +119,7 @@ export default function Login() {
             </Form>
           </CardContent>
         </Card>
+        <Toaster />
       </div>
 
     </main>

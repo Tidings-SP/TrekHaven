@@ -47,9 +47,9 @@ export default function ForgotPassword() {
     },
   })
 
-  async function onSubmit(data: Input) {
+  function onSubmit(data: Input) {
 
-      await sendPasswordResetEmail(auth, data.email)
+      sendPasswordResetEmail(auth, data.email)
       .then(() => { 
         toast(
             {
