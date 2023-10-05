@@ -1,6 +1,5 @@
 "use client"
 import Image from "next/image";
-import cardList from "./data"
 import img from "@/assets/imgSample.webp"
 import { useEffect, useState } from "react";
 import { onSnapshot, query, where, collection } from "firebase/firestore";
