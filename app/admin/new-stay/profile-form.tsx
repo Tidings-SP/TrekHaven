@@ -81,7 +81,7 @@ export function ProfileForm() {
                 <Input placeholder="Cottage in MD" {...field} />
               </FormControl>
               <FormDescription>
-                This is your stay`s public display name. 
+                This is your stay&apos;s public display name. 
               </FormDescription>
               <FormMessage />
             </FormItem>

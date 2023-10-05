@@ -3,10 +3,11 @@ import Image from "next/image"
 
 import { Separator } from "@/components/ui/separator"
 import { SidebarNav } from "@/app/admin/new-stay/components/sidebar-nav"
+import Link from "next/link"
 
 export const metadata: Metadata = {
   title: "Forms",
-  description: "Advanced form example using react-hook-form and Zod.",
+  description: "",
 }
 
 const sidebarNavItems = [
@@ -20,7 +21,7 @@ const sidebarNavItems = [
   },
   {
     title: "Features",
-    href: "/examples/forms/appearance",
+    href: "/admin/new-stay/features",
   },
   
 ]
@@ -52,8 +53,11 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
         <div className="space-y-0.5">
           <h2 className="text-2xl font-bold tracking-tight">New Stay</h2>
           <p className="text-muted-foreground">
-            Make your stay visible with Teak Haven.
+            Make your stay visible with Trek Haven.
           </p>
+          <Link href="/home" className="navbar__link relative float-right -top-8 ">
+            ← Back to Home
+          </Link>
         </div>
         <Separator className="my-6" />
         <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
