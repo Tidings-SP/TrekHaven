@@ -13,7 +13,7 @@ import SettingsLayout from './admin/new-stay/layout';
 export default function Home() {
   
   return (
-    <HomePage/>
+    <Login/>
   )
 }
 
