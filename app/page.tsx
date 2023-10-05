@@ -11,7 +11,7 @@ import Stays from './home/stays/stays';
 export default function Home() {
   
   return (
-    <HomePage/>
+    <Login/>
   )
 }
 
