@@ -53,7 +53,7 @@ export default function ForgotPassword() {
       .then(() => { 
         toast(
             {
-                title: "Check your mail to reset your password!!...",
+                title: "Check your registered mail to reset your password!!...",
             }
         )
          })
@@ -63,7 +63,6 @@ export default function ForgotPassword() {
                 title: "Something went wrong:(",
                 variant: "destructive",
             });
-        console.log(error); 
       });
   }
 

@@ -50,8 +50,7 @@ export default function Login() {
   })
 
   function onSubmit(data: Input) {
-    const email = "suryaprakashspro@gmail.com"
-    const password = "123456"
+    
     signInWithEmailAndPassword(auth, data.email, data.password)
       .then(() => { 
         toast(
