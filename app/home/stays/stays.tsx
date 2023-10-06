@@ -4,10 +4,12 @@ import img from "@/assets/imgSample.webp"
 import { useEffect, useState } from "react";
 import { onSnapshot, query, where, collection } from "firebase/firestore";
 import { db } from "@/app/authentication/firebase";
+import StayDetail from "./stay-detail/page";
+import { useRouter } from "next/navigation";
 
 
 export default function Stays() {
-
+  const router = useRouter();
   const [stays, setStays] = useState<{ id: string; name: string; desc: string }[]>([]);
 
   useEffect(() => {
@@ -22,6 +24,11 @@ export default function Stays() {
     return () => unsubscribe(); // Cleanup when the component unmounts
   }, []);
 
+  function handleOnClick(id:string) {
+    
+    router.push(`/home/stays/stay-detail?id=${id}`)
+  }
+
   return(
     <main className="container mx-auto py-8 px-8">
       <h1 className="text-4xl font-bold pb-3">Find Best Stays!</h1>
@@ -29,7 +36,8 @@ export default function Stays() {
         {stays.map(card => (
           <div
           className="shadow-lg rounded-lg" 
-          key={card.id} >
+          key={card.id}
+          onClick={() => handleOnClick(card.id)} >
             <Image
             className="rounded-lg"
             src={img}
