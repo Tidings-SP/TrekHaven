@@ -93,9 +93,6 @@ async function setDatabase(hotelid: string, username: string, userreview: string
 
 }
 
-function mapRR() {
-
-}
 
 const Ratings: React.FC<RatingsProps> = ({ hid }) => {
 

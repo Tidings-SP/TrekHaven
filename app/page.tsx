@@ -1,6 +1,4 @@
 'use client';
-import { register } from 'module';
-import { signOut, useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Register from './authentication/register/page';
 import HomePage from './home/page';
@@ -11,11 +9,27 @@ import SettingsLayout from './admin/new-stay/layout';
 import Ratings from './home/stays/stay-detail/ratings/page';
 import StayDetail from './home/stays/stay-detail/page';
 import { auth } from './authentication/firebase';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { useEffect, useState } from 'react';
 
 
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (authUser) => {
+      setUser(authUser);
+    });
+
+    // Cleanup the subscription when unmounting
+    return () => unsubscribe();
+  }, []);
   return (
-    <Login/>
+    <>
+
+      {user ? <HomePage /> : <Login />}
+
+    </>
+
   )
 }
 
