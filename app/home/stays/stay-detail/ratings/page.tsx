@@ -24,9 +24,7 @@ import { DocumentReference, addDoc, and, collection, doc, getDocs, onSnapshot, q
 import { auth, db } from "@/app/authentication/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
-type RatingsProps = {
-  hid: string;
-}
+
 const uid = auth.currentUser?.uid;
 
 const FormSchema = z.object({

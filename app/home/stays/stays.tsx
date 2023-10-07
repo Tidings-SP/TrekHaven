@@ -31,7 +31,7 @@ export default function Stays() {
 
   return(
     <main className="container mx-auto py-8 px-8">
-      <h1 className="text-4xl font-bold pb-3">Find Best Stays!</h1>
+      <h1 className="text-2xl font-bold pb-3">Find Best Stays!</h1>
       <div className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-1 gap-6">
         {stays.map(card => (
           <div
@@ -43,8 +43,8 @@ export default function Stays() {
             src={img}
             alt="Picture of the author"></Image>
             <div className="p-5">
-            <h3 className="text-3xl font-bold mb-3">{card.name}</h3>
-            <p className="text-lg font-normal">{card.desc}</p>
+            <h3 className="text-xl font-bold mb-3">{card.name}</h3>
+            <p className="text-lg font-normal line-clamp-2">{card.desc}</p>
             </div>
           </div>
         ))}

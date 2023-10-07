@@ -14,21 +14,9 @@ import { useEffect, useState } from 'react';
 
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (authUser) => {
-      setUser(authUser);
-    });
-
-    // Cleanup the subscription when unmounting
-    return () => unsubscribe();
-  }, []);
+  
   return (
-    <>
-
-      {user ? <HomePage /> : <Login />}
-
-    </>
+    <HomePage/>
 
   )
 }
