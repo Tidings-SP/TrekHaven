@@ -7,6 +7,7 @@ import img from "@/assets/imgSample.webp"
 import { db } from "@/app/authentication/firebase";
 import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
 import Ratings from "./ratings/page";
+import RatingsFragment from "./ratings/page";
 
 type Stay = {
   id: string;
@@ -80,7 +81,7 @@ export default function StayDetail() {
         
       </div>
       {/* Reviews & Ratings*/}
-      {id && <Ratings hid={id} />}
+      {id && <RatingsFragment hid={id} />}
 
 
     </>

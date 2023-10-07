@@ -24,7 +24,7 @@ import { DocumentReference, addDoc, and, collection, doc, getDocs, onSnapshot, q
 import { auth, db } from "@/app/authentication/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
-interface RatingsProps {
+type RatingsProps = {
   hid: string;
 }
 const uid = auth.currentUser?.uid;
@@ -94,7 +94,7 @@ async function setDatabase(hotelid: string, username: string, userreview: string
 }
 
 
-const Ratings: React.FC<RatingsProps> = ({ hid }) => {
+export default function RatingsFragment({ hid }:any) {
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -118,7 +118,7 @@ const Ratings: React.FC<RatingsProps> = ({ hid }) => {
       });
 
     } else {
-      console.log("User Not exist:rate")
+      console.log("User Not exist:during rate")
     }
   }
 
@@ -217,6 +217,4 @@ const Ratings: React.FC<RatingsProps> = ({ hid }) => {
       </Card>
     </div>
   )
-};
-
-export default Ratings;
+}
