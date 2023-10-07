@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import img from "@/assets/imgSample.webp"
 import { db } from "@/app/authentication/firebase";
-import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
+import Ratings from "./ratings/page";
 
 type Stay = {
   id: string;
@@ -18,7 +19,7 @@ export default function StayDetail() {
   const [stay, setStay] = useState<Stay | null>(null);
   const searchParams = useSearchParams();
   const id = searchParams?.get("id");
-
+  
   useEffect(() => {
     async function fetchStay() {
       if (id) {
@@ -37,19 +38,7 @@ export default function StayDetail() {
           }
         }
       }
-      // if (id) {
-      //   const q = query(collection(db, "hotels"), where("__name__", "==", id));
-      //   const querySnapshot = await getDocs(q);
 
-      //   if (!querySnapshot.empty) {
-      //     const doc = querySnapshot.docs[0];
-      //     setStay({
-      //       id: doc.id,
-      //       name: doc.data().name,
-      //       desc: doc.data().desc,
-      //     });
-      //   }
-      // }
     }
 
     fetchStay();
@@ -87,7 +76,13 @@ export default function StayDetail() {
           <h6 className='text-2xl font-semibold mt-2 ms-2'>Room Count</h6>
 
         </div>
+
+        
       </div>
+      {/* Reviews & Ratings*/}
+      {id && <Ratings hid={id} />}
+
+
     </>
   )
 }

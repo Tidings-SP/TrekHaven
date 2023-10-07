@@ -31,10 +31,11 @@ import { useToast } from "@/components/ui/use-toast"
 import { easeInOut } from "framer-motion/dom"
 import { ModeToggle } from "@/components/ui/toggle-mode"
 import { redirect, useRouter } from "next/navigation"
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "../firebase"
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth"
+import { auth, db } from "../firebase"
 import { signIn } from "next-auth/react"
 import TopNavBar from "@/components/navbar/top-navbar"
+import { doc, setDoc } from "firebase/firestore"
 
 
 type Input = z.infer<typeof registerSchema>;
@@ -66,9 +67,25 @@ export default function Register() {
             return;
         }
         createUserWithEmailAndPassword(auth, data.email, data.password)
-            .then(() => {
+            .then(async () => {
+                if(auth.currentUser){
+                    updateProfile(auth.currentUser, {
+                    displayName: data.name,
+                  })
+
+                  
+                    await setDoc(doc(db, "user", auth.currentUser.uid), {
+                      username: data.name,
+                      useremail: data.email,
+                      userphone: data.phone,
+                    });
+                  
+                }
+                
                 signInWithEmailAndPassword(auth, data.email, data.password)
                     .then(() => { 
+                        
+                        
                         toast(
                             {
                                 title: "Account created successfully!",

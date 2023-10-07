@@ -13,7 +13,7 @@ export default function Stays() {
   const [stays, setStays] = useState<{ id: string; name: string; desc: string }[]>([]);
 
   useEffect(() => {
-    const q = query(collection(db, "hotels"), where("amenities", "==", "ac"));
+    const q = query(collection(db, "hotels"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       setStays(
