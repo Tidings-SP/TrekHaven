@@ -4,6 +4,7 @@ import Image from "next/image"
 import { Separator } from "@/components/ui/separator"
 import { SidebarNav } from "@/app/admin/new-stay/components/sidebar-nav"
 import Link from "next/link"
+import React from "react"
 
 export const metadata: Metadata = {
   title: "Forms",
@@ -64,7 +65,12 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
           <aside className="-mx-4 lg:w-1/5">
             <SidebarNav items={sidebarNavItems} />
           </aside>
-          <div className="flex-1 lg:max-w-2xl">{children}</div>
+          <div className="flex-1 lg:max-w-2xl">
+          
+              {children}
+            
+            
+            </div>
         </div>
       </div>
     </>

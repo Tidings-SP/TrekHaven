@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/components/ui/theme-provider'
 import SessionProvider from './authentication/session-provider'
 import TopNavBar from '@/components/navbar/top-navbar'
+import React from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,10 +23,11 @@ export default function RootLayout({
       
       <body className={inter.className}>
         <ThemeProvider attribute='class' defaultTheme='light'>
-          <SessionProvider>
             
-            {children}
-          </SessionProvider>
+              {children}
+            
+            
+          
         </ThemeProvider></body>
     </html>
   )

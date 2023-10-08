@@ -56,17 +56,11 @@ export default function StayDetail() {
 
   const handlePayment = async () => {
     const res = await initializeRazorpay();
-    console.log("Here...")
     if (!res) {
       alert("Razorpay SDK Failed to load");
       return;
     }
 
-    // Make API call to the serverless API
-    // const data = await fetch("/home/stays/stay-detail/api", { method: "POST" }).then((t) =>
-    //   t.json()
-    // );
-    // console.log(data);
     if (stay) {
       var options = {
         key: "rzp_test_7iRQ8FI6FIOOsn",
@@ -93,11 +87,7 @@ export default function StayDetail() {
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.on('payment.failed', function (response:any){
         alert(response.error.code);
-        alert(response.error.description);
-        alert(response.error.source);
-        alert(response.error.step);
         alert(response.error.reason);
-        alert(response.error.metadata.order_id);
         alert(response.error.metadata.payment_id);
 });
       paymentObject.open();

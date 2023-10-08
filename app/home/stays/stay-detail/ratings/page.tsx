@@ -55,6 +55,7 @@ async function getDocRef(hid: string) {
     where("userid", "==", uid),
     where("hotelid", "==", hid)
   ));
+  
   const querySnapshot = await getDocs(q);
 
   querySnapshot.forEach((doc) => {

@@ -18,44 +18,72 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 
-const profileFormSchema = z.object({
-  name: z
+const locationFormSchema = z.object({
+  doorno: z
     .string()
-    .min(2, {
-      message: "name must be at least 2 characters.",
+    .min(3, {
+      message: "Door number must be at least 3 characters.",
+    })
+    .max(10, {
+      message: "Door number not be longer than 10 characters.",
+    }),
+  area: z
+    .string()
+    .min(3, {
+      message: "Area must be at least 3 characters.",
     })
     .max(30, {
-      message: "name must not be longer than 30 characters.",
+      message: "Area not be longer than 30 characters.",
     }),
-  email: z
-    .string({
-      required_error: "Please select an email to display.",
+  street: z
+    .string()
+    .min(3, {
+      message: "Street Addr must be at least 3 characters.",
     })
-    .email(),
-  bio: z.string().max(160).min(4),
-  
+    .max(30, {
+      message: "Street Addr not be longer than 30 characters.",
+    }),
+  city: z
+    .string()
+    .min(3, {
+      message: "City name must be at least 3 characters.",
+    })
+    .max(24, {
+      message: "City name not be longer than 24 characters.",
+    }),
+  state: z
+    .string()
+    .min(3, {
+      message: "State must be at least 3 characters.",
+    })
+    .max(20, {
+      message: "State not be longer than 20 characters.",
+    }),
+  country: z
+    .string()
+    .min(3, {
+      message: "Country name must be at least 3 characters.",
+    })
+    .max(20, {
+      message: "Country name not be longer than 20 characters.",
+    }),
+
+
 })
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>
+type LocationFormValues = z.infer<typeof locationFormSchema>
 
 
 export function LocationForm() {
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
+  const form = useForm<LocationFormValues>({
+    resolver: zodResolver(locationFormSchema),
     mode: "onChange",
   })
 
-  
 
-  function onSubmit(data: ProfileFormValues) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    })
+
+  function onSubmit(data: LocationFormValues) {
+    console.log(data)
   }
 
   return (
@@ -63,40 +91,95 @@ export function LocationForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="name"
+          name="doorno"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Display Name</FormLabel>
+              <FormLabel>Door Number</FormLabel>
               <FormControl>
-                <Input placeholder="Cottage in MD" {...field} />
+                <Input placeholder="58/A1..." {...field} />
               </FormControl>
-              <FormDescription>
-                This is your stay`s public display name. 
-              </FormDescription>
+
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
-          name="bio"
+          name="area"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Area</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Tell us a little bit about your stay"
-                  className="resize-none"
-                  {...field}
-                />
+                <Input placeholder="Teppakulam..." {...field} />
               </FormControl>
-              
+
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
+        <FormField
+          control={form.control}
+          name="street"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Street</FormLabel>
+              <FormControl>
+                <Input placeholder="Kamarajar street..." {...field} />
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="city"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>City</FormLabel>
+              <FormControl>
+                <Input placeholder="Madurai..." {...field} />
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="state"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>State</FormLabel>
+              <FormControl>
+                <Input placeholder="Tamil Nadu..." {...field} />
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="country"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Country</FormLabel>
+              <FormControl>
+                <Input placeholder="India..." {...field} />
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+
         <Button type="submit">Next Step</Button>
       </form>
     </Form>
