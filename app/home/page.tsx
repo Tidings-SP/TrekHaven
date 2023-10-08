@@ -1,3 +1,4 @@
+"use client"
 import TopNavBar from "@/components/navbar/top-navbar";
 import Filters from "./filters/filters";
 import Stays from "./stays/stays";
