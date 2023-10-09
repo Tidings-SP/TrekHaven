@@ -18,9 +18,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { auth, db } from "@/app/authentication/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { DocumentReference, addDoc, and, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useToast } from "@/components/ui/use-toast"
+import { Toaster } from "@/components/ui/toaster"
+import { resolve } from "path"
 let uid = auth.currentUser?.uid;
+let fnlId:string;
 const profileFormSchema = z.object({
   name: z
     .string()
@@ -58,12 +62,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-type Stay = {
-  id: string;
-  name: string;
-  desc: string;
-  price: number;
-};
 
 async function fetchRef(id: any) {
   let ref: DocumentReference | null = null;
@@ -71,21 +69,24 @@ async function fetchRef(id: any) {
     ref = doc(db, "hotels", id);
   }
   if (ref) {
+    fnlId = ref.id;
     return ref;
   } else {
     ref = await addDoc(collection(db, "hotels"), {
       createrid: uid,
       ispublished: false,
     });
+    fnlId = ref.id;
     return ref;
   }
 }
 
 async function setDatabase(id: any, name: string, desc: string) {
-  const docRef = doc(db, "hotels", id);
-  const docSnap = await getDoc(docRef);
+
   let isOk = false;
   if (id) {
+    const docRef = doc(db, "hotels", id);
+    const docSnap = await getDoc(docRef);
     if (docSnap.exists() && docSnap.data().createrid === uid) {
 
       isOk = true
@@ -93,46 +94,63 @@ async function setDatabase(id: any, name: string, desc: string) {
   } else {
     isOk = true
   }
+  return new Promise(async (resolve) => {
+    if (await authStatus() && isOk) {
+      
+        await updateDoc(await fetchRef(id), {
+          name: name,
+          desc: desc,
+        }).then(() => {
 
-  if (await authStatus() && isOk) {
+          resolve(true);
 
-    await updateDoc(await fetchRef(id), {
+        }).catch(
+          (e) => {
+            resolve(false);
+          }
+        );
 
-      name: name,
-      desc: desc,
-    });
+    } else {
+      resolve(false);
+    }
+  })
 
-  } else {
-    console.log("User Not exist")
-  }
 
 
 }
 
 async function initialData(id: any) {
 
-  const docRef = doc(db, "hotels", id);
-  const docSnap = await getDoc(docRef);
 
-  if (docSnap.exists() && docSnap.data().createrid === uid) {
-    return {
-      name: docSnap.data().name,
-      bio: docSnap.data().desc,
-    };
+  if (id) {
+    const docRef = doc(db, "hotels", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists() && docSnap.data().createrid === uid) {
+      return {
+        name: docSnap.data().name,
+        bio: docSnap.data().desc,
+      };
+    } else {
+      return {
+        name: "",
+        bio: "",
+      };
+    }
   } else {
     return {
       name: "",
       bio: "",
     };
   }
+
 }
 
 
 export function ProfileForm() {
-
+  const { toast } = useToast()
   const searchParams = useSearchParams();
   const id = searchParams?.get("id");
-
+  const router = useRouter()
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
   })
@@ -140,20 +158,27 @@ export function ProfileForm() {
   const defaultValues = useWatch({ control: form.control });
   useEffect(() => {
     const fetchData = async () => {
+      toast({
+        title: "Filling Data from Draft..Please Wait!...",
+      })
       const data = await initialData(id);
       form.setValue('name', data.name);
       form.setValue('bio', data.bio);
-      console.log("here...")
     };
 
     fetchData();
-  }, [form, id]);
+  }, [form, id, toast]);
 
 
-  function onSubmit(data: ProfileFormValues) {
-
-
-    setDatabase(id, data.name, data.bio)
+  async function onSubmit(data: ProfileFormValues) {
+    const updateResult = await setDatabase(id, data.name, data.bio);
+    if (updateResult) {
+      router.push(`/admin/new-stay/location?id=${fnlId}`)
+    } else (
+      toast({
+        title: "Something went wrong): Please Try Again! "
+      })
+    )
 
 
   }
@@ -199,8 +224,9 @@ export function ProfileForm() {
           )}
         />
 
-        <Button type="submit">Next Step</Button>
+        <Button type="submit">Save & Next Step</Button>
       </form>
+      <Toaster />
     </Form>
   )
 }

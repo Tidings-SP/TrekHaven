@@ -25,8 +25,17 @@ import { auth, db } from "@/app/authentication/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
-const uid = auth.currentUser?.uid;
+let uid = auth.currentUser?.uid;
+let name = auth.currentUser?.displayName;
 
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // User is authenticated, update uid
+    name = user.displayName
+    uid = user.uid;
+    console.log(uid)
+  }
+});
 const FormSchema = z.object({
   review: z
     .string()
@@ -100,7 +109,6 @@ export default function RatingsFragment({ hid }:any) {
   })
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    let name = auth.currentUser?.displayName;
 
 
     setDatabase(hid, name ? name : "Unknown Profile", data.review)
@@ -113,7 +121,9 @@ export default function RatingsFragment({ hid }:any) {
 
 
       await updateDoc(await getDocRef(hid), {
+        username: name ? name : "Unknown Profile",
         userratings: rate,
+
       });
 
     } else {
@@ -135,6 +145,7 @@ export default function RatingsFragment({ hid }:any) {
     return () => unsubscribe(); // Cleanup when the component unmounts
   }, [hid]);
 
+  console.log(rr.reduce((sum, item) => sum + item.rating, 0)/rr.length);
 
   return (
     <div className="p-8 flex">

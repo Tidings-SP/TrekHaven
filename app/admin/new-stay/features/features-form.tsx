@@ -15,8 +15,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { toast } from "@/components/ui/use-toast"
+import { toast, useToast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
+import { Toaster } from "@/components/ui/toaster"
+import { useRouter, useSearchParams } from "next/navigation"
+import { DocumentReference, doc, getDoc, updateDoc } from "firebase/firestore"
+import { auth, db } from "@/app/authentication/firebase"
+import { onAuthStateChanged } from "firebase/auth"
+let uid = auth.currentUser?.uid;
 
 const items = [
   {
@@ -51,60 +57,152 @@ const displayFormSchema = z.object({
     message: "You have to select at least one item.",
   }),
   image: z
-  .any()
-//   .refine((files) => {
-//     return files?.size <= MAX_FILE_SIZE;
-//  }, `Max image size is 5MB.`)
-//  .refine(
-//    (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-//    "Only .jpg, .jpeg, .png and .webp formats are supported."
-//  ),
-,
+    .any()
+  //   .refine((files) => {
+  //     return files?.size <= MAX_FILE_SIZE;
+  //  }, `Max image size is 5MB.`)
+  //  .refine(
+  //    (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+  //    "Only .jpg, .jpeg, .png and .webp formats are supported."
+  //  ),
+  ,
   price: z
     .any()
     .refine((p) => p >= 100, `Price should be minimum of 100`),
-  
+
+  roomcount: z
+    .any()
+    .refine((p) => p >= 1, `Room count should be minimum of 1`),
+
 })
 
 type DisplayFormValues = z.infer<typeof displayFormSchema>
 
 // This come from  database.
 const defaultValues: Partial<DisplayFormValues> = {
-  items: ["TV"],
+  items: ["TV", "Wifi"],
 }
 
+
+function authStatus() {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        resolve(true); // User is signed in
+      } else {
+        console.log("User Not signin");
+        resolve(false); // User is not signed in
+      }
+    });
+  });
+}
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // User is authenticated, update uid
+
+    uid = user.uid;
+    console.log(uid)
+  }
+});
+
+
+async function fetchRef(id: any) {
+  let ref: DocumentReference;
+
+  ref = doc(db, "hotels", id);
+
+  return ref;
+
+}
+
+async function setDatabase(
+  id: any,
+  price: number,
+  roomcount: number,
+  items: string[],
+
+) {
+
+  let isOk = false;
+  if (id) {
+    const docRef = doc(db, "hotels", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists() && docSnap.data().createrid === uid) {
+
+      isOk = true
+    }
+  } else {
+    isOk = true
+  }
+  return new Promise(async (resolve) => {
+    if (await authStatus() && isOk) {
+
+      await updateDoc(await fetchRef(id), {
+        price: Number(price),
+        roomcount: Number(roomcount),
+        items: items,
+        ispublished: true,
+        rating:0,
+
+
+
+      }).then(() => {
+
+        resolve(true);
+
+      }).catch(
+        (e) => {
+          resolve(false);
+        }
+      );
+
+    } else {
+      resolve(false);
+    }
+  })
+
+}
+
+
+
 export function FeaturesForm() {
+  const searchParams = useSearchParams();
+  const id = searchParams?.get("id");
+  const router = useRouter()
+
+
   const form = useForm<DisplayFormValues>({
     resolver: zodResolver(displayFormSchema),
     defaultValues,
   })
-  
 
-  function onSubmit(data: DisplayFormValues) {
-    console.log(data);
-    
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    })
+
+  async function onSubmit(data: DisplayFormValues) {
+    const updateResult = await setDatabase(
+      id, data.price, data.roomcount, data.items
+    );
+    if (updateResult) {
+      router.push("/")
+    } else (
+      toast({
+        title: "Something went wrong): Please Try Again! "
+      })
+    )
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-      <FormField
+        <FormField
           control={form.control}
           name="image"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Image of your stay</FormLabel>
               <FormControl>
-              <Input  type="file" {...field}/>
+                <Input type="file" {...field} />
               </FormControl>
 
               <FormMessage />
@@ -163,10 +261,25 @@ export function FeaturesForm() {
 
         <FormField
           control={form.control}
+          name="roomcount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Room Count</FormLabel>
+              <FormControl>
+                <Input placeholder="6..." {...field} />
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="price"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Price</FormLabel>
+              <FormLabel>Price Per Room</FormLabel>
               <FormControl>
                 <Input placeholder="100..." {...field} />
               </FormControl>
@@ -175,8 +288,20 @@ export function FeaturesForm() {
             </FormItem>
           )}
         />
-        <Button type="submit">Publish</Button>
+        <div className="flex gap-4">
+
+          <Button type="button"
+            onClick={
+              () => {
+                router.push(`/admin/new-stay/location?id=${id}`)
+
+              }
+            }
+            variant={"ghost"}>Go Back</Button>
+          <Button type="submit">Publish</Button>
+        </div>
       </form>
+      <Toaster />
     </Form>
   )
 }
