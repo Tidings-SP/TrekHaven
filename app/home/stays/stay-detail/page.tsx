@@ -22,16 +22,16 @@ type Stay = {
   price: number;
   rate: number;
 };
-async function add(uid:string, hid:string, createrid:string,pid:string,price:number) {
-  const docRef = await addDoc(collection(db, "history"), {
+async function add(uid:string, hid:string, createrid:string,pid:string,price:number, status:string) {
+  await addDoc(collection(db, "history"), {
     userid:uid,
     createrid:createrid,
     price: price,
     pid:pid,
     hotelid:hid,
     time:new Date().toLocaleString(),
+    status:status,
   });
-  console.log("Document written with ID: ", docRef.id);
 }
 export default function StayDetail() {
   const [stay, setStay] = useState<Stay | null>(null);
@@ -95,8 +95,8 @@ export default function StayDetail() {
         description: "Enjoy your stay!",
         handler: function (response: any) {
           // Validate payment at server - using webhooks is a better idea.
+          add(uid, stay.id, stay.createrid, response.razorpay_payment_id, stay.price, "success")
           alert(response.razorpay_payment_id);
-          add(uid, stay.id, stay.createrid, response.razorpay_payment_id, stay.price)
 
         },
         prefill: {
@@ -111,9 +111,11 @@ export default function StayDetail() {
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.on('payment.failed', function (response: any) {
+        add(uid, stay.id, stay.createrid, response.error.metadata.payment_id, stay.price, "fail")
         alert(response.error.code);
         alert(response.error.reason);
         alert(response.error.metadata.payment_id);
+
       });
       paymentObject.open();
     }

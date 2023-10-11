@@ -18,7 +18,6 @@ export default function AdminDashboard() {
 let uid = auth.currentUser?.uid;
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    console.log("called...  ")
     // User is authenticated, update uid
     uid = user.uid;
   }
@@ -29,10 +28,9 @@ onAuthStateChanged(auth, (user) => {
     name: string;
     desc: string;
   }[]>([]);
-  const fetchStays = (uid:any) => {
-    console.log(uid)
+  const fetch = (uid:any) => {
     
-    if(uid){
+    if(uid) {
 
       const q = query(collection(db, "hotels"), where("createrid", "==", uid));
   
@@ -48,7 +46,7 @@ onAuthStateChanged(auth, (user) => {
 
   useEffect(() => {
     if (uid !== null) {
-      fetchStays(uid); // Call the function when uid is not null
+      fetch(uid); // Call the function when uid is not null
     }
   }, [uid]);
 

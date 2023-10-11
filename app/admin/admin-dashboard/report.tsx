@@ -3,47 +3,103 @@ import { useTheme } from "next-themes"
 import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts"
 import { themes } from "./themes"
 import { useConfig } from "./use-config"
+import { useEffect, useState } from "react"
+import { and, collection, onSnapshot, query, where } from "firebase/firestore"
+import { auth, db } from "@/app/authentication/firebase"
+import { onAuthStateChanged } from "firebase/auth"
 
 
 
-const data = [
-  {
-    average: 400,
-    today: 240,
-  },
-  {
-    average: 300,
-    today: 139,
-  },
-  {
-    average: 200,
-    today: 980,
-  },
-  {
-    average: 278,
-    today: 390,
-  },
-  {
-    average: 189,
-    today: 480,
-  },
-  {
-    average: 239,
-    today: 380,
-  },
-  {
-    average: 349,
-    today: 430,
-  },
+// const data = [
+//   {
+    
+//     today: 240,
+//   },
+//   {
+    
+//     today: 139,
+//   },
+//   {
+    
+//     today: 980,
+//   },
+//   {
+    
+//     today: 390,
+//   },
+//   {
+    
+//     today: 480,
+//   },
+//   {
+    
+//     today: 380,
+//   },
+//   {
+    
+//     today: 430,
+//   },
   
-]
+// ]
 
 export default function ReportMetrics() {
   const { theme: mode } = useTheme()
   const [config] = useConfig()
+  const [data, setData] = useState<{total:number, time:string}[]>([]);
+  let uid = auth.currentUser?.uid;
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is authenticated, update uid
+      uid = user.uid;
+    }
+  });
+
+  const fetch = (uid:any) => {
+    
+    if(uid){
+
+      const q = query(collection(db, "history"), 
+      and(
+        where("createrid", "==", uid),
+        where("status", "==","success")
+      ));
+  
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        setData(
+          querySnapshot.docs.map((doc) => ({total: doc.data().price, time: doc.data().time }))
+        );
+      });
+
+      
+  
+      return () => unsubscribe(); // Cleanup when the component unmounts
+    }
+  }
+  useEffect(() => {
+    fetch(uid)
+
+  },[uid])
+
+  useEffect(() => {
+    data.sort((a, b) => {
+      const dateA = new Date(a.time).getTime();
+      const dateB = new Date(b.time).getTime();
+    
+      return dateA - dateB; // Sorting in ascending order
+    });
+
+    // Calculate cumulative score
+    let cumulativeScore = 0;
+    data.forEach((item) => {
+      cumulativeScore += Number(item.total);
+      item.total = cumulativeScore;
+    });
+    console.log(data)
+
+    
+  },[data])
 
   const theme = themes.find((theme:any) => theme.name === config.theme)
-
   return (
     <Card>
       <CardHeader>
@@ -71,19 +127,19 @@ export default function ReportMetrics() {
                       <div className="rounded-lg border bg-background p-2 shadow-sm">
                         <div className="grid grid-cols-2 gap-2">
                           <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                            {/* <span className="text-[0.70rem] uppercase text-muted-foreground">
                               Average
                             </span>
                             <span className="font-bold text-muted-foreground">
                               {payload[0].value}
-                            </span>
+                            </span> */}
                           </div>
                           <div className="flex flex-col">
                             <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              Today
+                              Total
                             </span>
                             <span className="font-bold">
-                              {payload[1].value}
+                              {payload[0].value}
                             </span>
                           </div>
                         </div>
@@ -94,7 +150,7 @@ export default function ReportMetrics() {
                   return null
                 }}
               />
-              <Line
+              {/* <Line
                 type="monotone"
                 strokeWidth={2}
                 dataKey="average"
@@ -111,10 +167,10 @@ export default function ReportMetrics() {
                     })`,
                   } as React.CSSProperties
                 }
-              />
+              /> */}
               <Line
                 type="monotone"
-                dataKey="today"
+                dataKey="total"
                 strokeWidth={2}
                 activeDot={{
                   r: 8,

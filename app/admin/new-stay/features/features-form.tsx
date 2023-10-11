@@ -22,6 +22,8 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { DocumentReference, doc, getDoc, updateDoc } from "firebase/firestore"
 import { auth, db } from "@/app/authentication/firebase"
 import { onAuthStateChanged } from "firebase/auth"
+import { useState } from "react"
+import { getStorage, ref } from "firebase/storage";
 let uid = auth.currentUser?.uid;
 
 const items = [
@@ -121,6 +123,7 @@ async function setDatabase(
   price: number,
   roomcount: number,
   items: string[],
+  ref: string,
 
 ) {
 
@@ -143,7 +146,8 @@ async function setDatabase(
         roomcount: Number(roomcount),
         items: items,
         ispublished: true,
-        rate:"0",
+        rate: "0",
+        ref: ref,
       }).then(() => {
 
         resolve(true);
@@ -168,16 +172,32 @@ export function FeaturesForm() {
   const id = searchParams?.get("id");
   const router = useRouter()
 
+  const [img, setImg] = useState<File>();
+
+
 
   const form = useForm<DisplayFormValues>({
     resolver: zodResolver(displayFormSchema),
     defaultValues,
   })
 
+  function uploadImg() {
+    if(!img){
+      toast({
+        title:"Image is not uploaded, Please Try again!",
+        variant:"destructive",
+      })
+      return;
+    }
+
+    // const imgRef = ref(storage, `hotels/${img.name}`);
+
+  }
 
   async function onSubmit(data: DisplayFormValues) {
+
     const updateResult = await setDatabase(
-      id, data.price, data.roomcount, data.items
+      id, data.price, data.roomcount, data.items, "",
     );
     if (updateResult) {
       router.push("/")
@@ -199,7 +219,14 @@ export function FeaturesForm() {
             <FormItem>
               <FormLabel>Image of your stay</FormLabel>
               <FormControl>
-                <Input type="file" {...field} />
+                <Input type="file"
+                  onChange={(e) => field.onChange(() => {
+                    if (e.target.files) {
+                      setImg(e.target.files[0])
+                    }
+                  })
+                }
+                />
               </FormControl>
 
               <FormMessage />
