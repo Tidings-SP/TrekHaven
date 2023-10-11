@@ -114,6 +114,13 @@ export default function RatingsFragment({ hid }:any) {
     setDatabase(hid, name ? name : "Unknown Profile", data.review)
 
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  async function updateOverallRate() {
+    const orr = String(rr.reduce((sum, item) => sum + item.rating, 0)/rr.length)
+    await updateDoc(doc(db, "hotels", hid), {
+  rate: orr,
+    });
+  }
   // Catch Rating value
   const handleRating = async (rate: number) => {
 
@@ -125,6 +132,8 @@ export default function RatingsFragment({ hid }:any) {
         userratings: rate,
 
       });
+    updateOverallRate()
+
 
     } else {
       console.log("User Not exist:during rate")
@@ -142,10 +151,15 @@ export default function RatingsFragment({ hid }:any) {
       );
     });
 
+    
+
+    
     return () => unsubscribe(); // Cleanup when the component unmounts
   }, [hid]);
 
-  console.log(rr.reduce((sum, item) => sum + item.rating, 0)/rr.length);
+  
+
+  
 
   return (
     <div className="p-8 flex">
@@ -158,9 +172,6 @@ export default function RatingsFragment({ hid }:any) {
         </CardHeader>
 
         <CardContent className=" grid gap-6">
-
-
-
 
           <div className="-mx-2 flex items-centre space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
             <div className="space-y-1">
@@ -212,7 +223,6 @@ export default function RatingsFragment({ hid }:any) {
                     initialValue={r.rating}
                     readonly={true}
                     SVGclassName="inline-block"
-                    onClick={handleRating}
                   />
                   <p className="text-sm text-muted-foreground">
                     {r.review}

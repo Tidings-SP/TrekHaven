@@ -4,24 +4,47 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import img from "@/assets/imgSample.webp"
-import { db } from "@/app/authentication/firebase";
+import { auth, db } from "@/app/authentication/firebase";
 import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
 import Ratings from "./ratings/page";
 import RatingsFragment from "./ratings/page";
+import { Star } from "lucide-react";
+import { BsStarFill } from "react-icons/bs";
+import { Rating } from "react-simple-star-rating";
+import { onAuthStateChanged } from "firebase/auth";
 const Razorpay = require('razorpay');
 
 type Stay = {
   id: string;
+  createrid:string;
   name: string;
   desc: string;
   price: number;
+  rate: number;
 };
-
+async function add(uid:string, hid:string, createrid:string,pid:string,price:number) {
+  const docRef = await addDoc(collection(db, "history"), {
+    userid:uid,
+    createrid:createrid,
+    price: price,
+    pid:pid,
+    hotelid:hid,
+    time:new Date().toLocaleString(),
+  });
+  console.log("Document written with ID: ", docRef.id);
+}
 export default function StayDetail() {
   const [stay, setStay] = useState<Stay | null>(null);
   const searchParams = useSearchParams();
   const id = searchParams?.get("id");
-
+  let uid:string;
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("called...  ")
+      // User is authenticated, update uid
+      uid = user.uid;
+    }
+  });
   useEffect(() => {
     async function fetchStay() {
       if (id) {
@@ -30,12 +53,15 @@ export default function StayDetail() {
 
         if (docSnapshot.exists()) {
           const stayData = docSnapshot.data();
+          console.log(stayData.rate)
           if (stayData) {
             setStay({
               id: docSnapshot.id,
+              createrid:stayData.createrid,
               name: stayData.name,
               desc: stayData.desc,
               price: stayData.price,
+              rate: stayData.rate
             });
           }
         }
@@ -45,10 +71,8 @@ export default function StayDetail() {
 
     fetchStay();
   }, [id]);
-  // const script = document.createElement('script');
-  // script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-  // script.async = true;
-  // document.body.appendChild(script);
+  
+
 
   const [amount, setAmount] = useState(1);
 
@@ -72,24 +96,25 @@ export default function StayDetail() {
         handler: function (response: any) {
           // Validate payment at server - using webhooks is a better idea.
           alert(response.razorpay_payment_id);
-          
+          add(uid, stay.id, stay.createrid, response.razorpay_payment_id, stay.price)
+
         },
         prefill: {
           name: "TrekHavel",
           email: "TrekHaven@example.com",
           contact: "3333333333",
         },
-        
-         
+
+
 
       };
 
       const paymentObject = new (window as any).Razorpay(options);
-      paymentObject.on('payment.failed', function (response:any){
+      paymentObject.on('payment.failed', function (response: any) {
         alert(response.error.code);
         alert(response.error.reason);
         alert(response.error.metadata.payment_id);
-});
+      });
       paymentObject.open();
     }
 
@@ -133,7 +158,9 @@ export default function StayDetail() {
           </p>
           <h6 className='text-2xl font-semibold'>₹ {stay?.price}</h6>
 
+          <h6 className='text-2xl font-semibold mt-2 ms-2'>Room Count</h6>
           <div className='flex flex-row items-center gap-12'>
+
             <div className='flex flex-row items-center'>
               <Button className='bg-secondary-foreground py-2 px-5 rounded-lg  text-3xl' onClick={() => setAmount((prev) => prev - 1)}>-</Button>
               <span className='py-4 px-6 rounded-lg'>{amount}</span>
@@ -141,9 +168,17 @@ export default function StayDetail() {
             </div>
             <Button onClick={handlePayment} className=' text-white font-semibold py-3 px-16 rounded-xl h-full'>Book Now</Button>
           </div>
-          <h6 className='text-2xl font-semibold mt-2 ms-2'>Room Count</h6>
 
+          <h6 className='flex items-center text-xl font-semibold mt-2 ms-2'>Overall Rating:
+            <Rating
+            className="mb-1"
+              size={25}
+              initialValue={stay?.rate}
+              readonly={true}
+              SVGclassName="inline-block"
+            /></h6>
         </div>
+
 
 
       </div>

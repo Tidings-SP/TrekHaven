@@ -143,10 +143,7 @@ async function setDatabase(
         roomcount: Number(roomcount),
         items: items,
         ispublished: true,
-        rating:0,
-
-
-
+        rate:"0",
       }).then(() => {
 
         resolve(true);

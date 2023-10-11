@@ -56,8 +56,8 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
           <p className="text-muted-foreground">
             Make your stay visible with Trek Haven.
           </p>
-          <Link href="/home" className="navbar__link relative float-right -top-8 ">
-            ← Back to Home
+          <Link href="/admin/admin-dashboard" className="navbar__link relative float-right -top-8 ">
+            ← Back to Dash
           </Link>
         </div>
         <Separator className="my-6" />

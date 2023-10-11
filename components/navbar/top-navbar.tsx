@@ -34,7 +34,7 @@ const TopNavBar = () => {
             size={20}
           />
         </div>
-<Link href="/admin/new-stay">
+<Link href="/admin/admin-dashboard">
 <div className="hidden lg:flex gap-4 font-medium navbar__link relative">
           Manage Your
           Stay

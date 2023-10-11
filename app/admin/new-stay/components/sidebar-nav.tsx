@@ -25,10 +25,9 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
       {...props}
     >
       {items.map((item) => (
-        <Link  
-        
+        <Button disabled
+        variant={"ghost"}
           key={item.href}
-          href={item.href}
           className={cn(
             
             pathname === item.href
@@ -38,7 +37,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
           )}
         >
           {item.title}
-        </Link>
+        </Button>
       ))}
     </nav>
   )
