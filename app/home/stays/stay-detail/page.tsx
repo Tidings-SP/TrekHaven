@@ -12,6 +12,7 @@ import { Star } from "lucide-react";
 import { BsStarFill } from "react-icons/bs";
 import { Rating } from "react-simple-star-rating";
 import { onAuthStateChanged } from "firebase/auth";
+import { ref } from "firebase/storage";
 const Razorpay = require('razorpay');
 
 type Stay = {
@@ -21,6 +22,7 @@ type Stay = {
   desc: string;
   price: number;
   rate: number;
+  ref: string;
 };
 async function add(uid:string, hid:string, createrid:string,pid:string,price:number, status:string) {
   await addDoc(collection(db, "history"), {
@@ -61,7 +63,8 @@ export default function StayDetail() {
               name: stayData.name,
               desc: stayData.desc,
               price: stayData.price,
-              rate: stayData.rate
+              rate: stayData.rate,
+              ref: stayData.ref,
             });
           }
         }
@@ -145,7 +148,10 @@ export default function StayDetail() {
     <>
       <div className='flex flex-col justify-between lg:flex-row gap-16 lg:items-center p-5'>
         <div className='flex flex-col gap-6 lg:w-2/4'>
-          <Image src={img} alt="" className='w-full h-full aspect-square object-cover rounded-xl' />
+          <Image src={(stay)?stay.ref:"/"} 
+          width={500}
+          height={500}
+          alt="Image by publisher" className='w-full h-full aspect-square object-cover rounded-xl' />
 
         </div>
         {/* ABOUT */}

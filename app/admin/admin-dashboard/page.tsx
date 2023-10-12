@@ -27,6 +27,7 @@ onAuthStateChanged(auth, (user) => {
     id: string;
     name: string;
     desc: string;
+    ref: string;
   }[]>([]);
   const fetch = (uid:any) => {
     
@@ -36,7 +37,7 @@ onAuthStateChanged(auth, (user) => {
   
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         setStays(
-          querySnapshot.docs.map((doc) => ({ id: doc.id, name: doc.data().name, desc: doc.data().desc }))
+          querySnapshot.docs.map((doc) => ({ id: doc.id, name: doc.data().name, desc: doc.data().desc, ref: doc.data().ref }))
         );
       });
   
@@ -73,10 +74,17 @@ onAuthStateChanged(auth, (user) => {
               className="shadow-lg rounded-lg"
               key={card.id}
             >
+              <div className="flex items-center justify-center   ">
+              <div className="flex w-[100%] h-[100%] overflow-hidden items-center justify-center">
+
               <Image
                 className="rounded-lg"
-                src={img}
-                alt="Picture of the author"></Image>
+                src={card.ref}
+                width={240}
+                height={240}
+                alt="Picture posted by the author"></Image>
+              </div>
+            </div>
               <div className="p-5">
                 <h3 className="text-xl font-bold mb-3 line-clamp-2">{card.name}</h3>
                 <p className="text-lg font-normal line-clamp-2">{card.desc}</p>

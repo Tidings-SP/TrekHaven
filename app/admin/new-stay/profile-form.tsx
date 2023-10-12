@@ -24,7 +24,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { resolve } from "path"
 let uid = auth.currentUser?.uid;
-let fnlId:string;
+let fnlId: string;
 const profileFormSchema = z.object({
   name: z
     .string()
@@ -96,19 +96,19 @@ async function setDatabase(id: any, name: string, desc: string) {
   }
   return new Promise(async (resolve) => {
     if (await authStatus() && isOk) {
-      
-        await updateDoc(await fetchRef(id), {
-          name: name,
-          desc: desc,
-        }).then(() => {
 
-          resolve(true);
+      await updateDoc(await fetchRef(id), {
+        name: name,
+        desc: desc,
+      }).then(() => {
 
-        }).catch(
-          (e) => {
-            resolve(false);
-          }
-        );
+        resolve(true);
+
+      }).catch(
+        (e) => {
+          resolve(false);
+        }
+      );
 
     } else {
       resolve(false);
@@ -158,9 +158,12 @@ export function ProfileForm() {
   const defaultValues = useWatch({ control: form.control });
   useEffect(() => {
     const fetchData = async () => {
-      toast({
-        title: "Filling Data from Draft..Please Wait!...",
-      })
+      if (id) {
+        toast({
+          title: "Filling Data from Draft..Please Wait!...",
+        })
+      }
+
       const data = await initialData(id);
       form.setValue('name', data.name);
       form.setValue('bio', data.bio);

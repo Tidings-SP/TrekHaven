@@ -20,10 +20,10 @@ import { Input } from "@/components/ui/input"
 import { Toaster } from "@/components/ui/toaster"
 import { useRouter, useSearchParams } from "next/navigation"
 import { DocumentReference, doc, getDoc, updateDoc } from "firebase/firestore"
-import { auth, db } from "@/app/authentication/firebase"
+import { auth, db, storage } from "@/app/authentication/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { useState } from "react"
-import { getStorage, ref } from "firebase/storage";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 let uid = auth.currentUser?.uid;
 
 const items = [
@@ -123,7 +123,7 @@ async function setDatabase(
   price: number,
   roomcount: number,
   items: string[],
-  ref: string,
+  ref: string|undefined,
 
 ) {
 
@@ -171,7 +171,6 @@ export function FeaturesForm() {
   const searchParams = useSearchParams();
   const id = searchParams?.get("id");
   const router = useRouter()
-
   const [img, setImg] = useState<File>();
 
 
@@ -182,30 +181,46 @@ export function FeaturesForm() {
   })
 
   function uploadImg() {
-    if(!img){
-      toast({
-        title:"Image is not uploaded, Please Try again!",
-        variant:"destructive",
-      })
-      return;
-    }
-
-    // const imgRef = ref(storage, `hotels/${img.name}`);
+   
 
   }
 
   async function onSubmit(data: DisplayFormValues) {
 
-    const updateResult = await setDatabase(
-      id, data.price, data.roomcount, data.items, "",
-    );
-    if (updateResult) {
-      router.push("/")
-    } else (
+    if (!img) {
       toast({
-        title: "Something went wrong): Please Try Again! "
+        title: "Image is not uploaded, Please Try again!",
+        variant: "destructive",
       })
+      return;
+    }
+    const imgRef = ref(storage, `hotels/${img.name}`);
+
+    uploadBytes(imgRef, img).then(
+      (snapshot) => {
+        getDownloadURL(snapshot.ref).then(async (url) => {
+          const updateResult = await setDatabase(
+            id, data.price, data.roomcount, data.items, url,
+          );
+          if (updateResult) {
+            router.push("/")
+          } else (
+            toast({
+              title: "Something went wrong): Please Try Again! "
+            })
+          )
+        })
+      }
+    ).catch(() => {
+      toast({
+        title: "Image is not uploaded, Please Try again!",
+        variant: "destructive",
+      })
+      return;
+    }
     )
+
+    
   }
 
   return (
@@ -225,7 +240,7 @@ export function FeaturesForm() {
                       setImg(e.target.files[0])
                     }
                   })
-                }
+                  }
                 />
               </FormControl>
 

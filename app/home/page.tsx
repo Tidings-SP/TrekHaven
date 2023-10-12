@@ -24,9 +24,6 @@ export default function HomePage() {
   
   return (
     <>
-    
-      <TopNavBar/>
-      <Filters/>
       <Stays/>
     </>
   )
