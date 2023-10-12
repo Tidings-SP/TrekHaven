@@ -19,8 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const variants = {
-  open: { opacity: 1, y: 0, height: 350, display: "inline" },
-  closed: { opacity: 0, y: "-200%", height: 0, display:"none" },
+  open: { opacity: 1, y: 0, height: 350 },
+  closed: { opacity: 0, y: "-200%", height: 0 },
 }
 export default function Stays() {
   const router = useRouter();
@@ -201,7 +201,7 @@ export default function Stays() {
           animate={open ? "open" : "closed"}
           variants={variants}
         >
-          <div className="flex flex-col p-6 accent-primary">
+          <div className={cn("flex flex-col p-6 accent-primary", {hidden: open === 0})}>
             <h4 className="text-primary">Amenities</h4>
             <label>
               <input
