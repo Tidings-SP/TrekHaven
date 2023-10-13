@@ -136,13 +136,12 @@ export default function UserDash() {
     [shuffledStays[i], shuffledStays[j]] = [shuffledStays[j], shuffledStays[i]]; // Swap elements to shuffle
   }
   const filteredStays = shuffledStays.filter((stay) => {
-    const priceFilter = Math.abs(stay.price - prec) <= 1000;
+    const priceFilter = Math.abs(stay.price - prec) <= 2000;
 // Filter by price around (within 300 range)
     const locationFilter = loc.includes(stay.location); // Filter by location
 
     return priceFilter && locationFilter;
   }).slice(0, 8);
-
   function handleOnClick(id: string, location:string, price:number) {
     addImpression(uid, location, price)
     router.push(`/home/stays/stay-detail?id=${id}`)
@@ -232,7 +231,7 @@ export default function UserDash() {
 
                 <div className="flex flex-row text-xl justify-between p-5 m-4">
                   <div className="flex float-left">₹ {card.price}</div>
-                  <div className="flex float-right items-center">{card.rate} <BsFillStarFill className="ms-3 mb-1" color="yellow" /></div>
+                  <div className="flex float-right items-center">{Number(card.rate).toFixed(1)} <BsFillStarFill className="ms-3 mb-1" color="yellow" /></div>
                 </div>
               </div>
 
