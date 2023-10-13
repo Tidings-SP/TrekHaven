@@ -3,7 +3,7 @@ import Image from "next/image";
 import img from "@/assets/imgSample.webp"
 import { useEffect, useState } from "react";
 import { onSnapshot, query, where, collection, and } from "firebase/firestore";
-import { db } from "@/app/authentication/firebase";
+import { auth, db } from "@/app/authentication/firebase";
 import { useRouter } from "next/navigation";
 import { BsFillStarFill } from "react-icons/bs";
 import { CgProfile } from "react-icons/cg";
@@ -13,10 +13,15 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar } from "@radix-ui/react-avatar";
+import email from "next-auth/providers/email";
+import { signOut } from "next-auth/react";
+import { ProfileNav } from "@/components/navbar/profile-nav";
 
 const variants = {
   open: { opacity: 1, y: 0, height: 350 },
@@ -119,7 +124,10 @@ export default function Stays() {
               TrekHaven
 
             </div>
-            <CgProfile className="flex text-[30px] mt-2 sm:hidden" />
+            <div className="flex text-[30px] mt-2 sm:hidden">
+
+            <ProfileNav/>
+            </div>
 
           </div>
 
@@ -149,10 +157,10 @@ export default function Stays() {
             </div>
           </Link>
 
+          <div
+            className="hidden lg:flex gap-4 text-[30px]">
 
-          <div className="hidden lg:flex gap-4 text-[30px]">
-            <CgProfile />
-
+            <ProfileNav />
 
           </div>
           <div className="hidden lg:flex gap-4 text-[30px]">
@@ -160,6 +168,7 @@ export default function Stays() {
 
             <ModeToggle />
           </div>
+
 
 
 
@@ -201,7 +210,7 @@ export default function Stays() {
           animate={open ? "open" : "closed"}
           variants={variants}
         >
-          <div className={cn("flex flex-col p-6 accent-primary", {hidden: open === 0})}>
+          <div className={cn("flex flex-col p-6 accent-primary", { hidden: open === 0 })}>
             <h4 className="text-primary">Amenities</h4>
             <label>
               <input

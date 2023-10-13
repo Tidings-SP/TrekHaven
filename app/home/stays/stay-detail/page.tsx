@@ -13,7 +13,6 @@ import { BsStarFill } from "react-icons/bs";
 import { Rating } from "react-simple-star-rating";
 import { onAuthStateChanged } from "firebase/auth";
 import { ref } from "firebase/storage";
-const Razorpay = require('razorpay');
 
 type Stay = {
   id: string;
@@ -24,10 +23,11 @@ type Stay = {
   rate: number;
   ref: string;
 };
-async function add(uid:string, hid:string, createrid:string,pid:string,price:number, status:string) {
+async function add(uid:string, hid:string, hname:string , createrid:string,pid:string,price:number, status:string) {
   await addDoc(collection(db, "history"), {
     userid:uid,
     createrid:createrid,
+    hname: hname, 
     price: price,
     pid:pid,
     hotelid:hid,
@@ -42,7 +42,6 @@ export default function StayDetail() {
   let uid:string;
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      console.log("called...  ")
       // User is authenticated, update uid
       uid = user.uid;
     }
@@ -98,7 +97,7 @@ export default function StayDetail() {
         description: "Enjoy your stay!",
         handler: function (response: any) {
           // Validate payment at server - using webhooks is a better idea.
-          add(uid, stay.id, stay.createrid, response.razorpay_payment_id, stay.price, "success")
+          add(uid, stay.id, stay.name ,stay.createrid, response.razorpay_payment_id, stay.price, "success")
           alert(response.razorpay_payment_id);
 
         },
@@ -114,7 +113,7 @@ export default function StayDetail() {
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.on('payment.failed', function (response: any) {
-        add(uid, stay.id, stay.createrid, response.error.metadata.payment_id, stay.price, "fail")
+        add(uid, stay.id,stay.name, stay.createrid, response.error.metadata.payment_id, stay.price, "fail")
         alert(response.error.code);
         alert(response.error.reason);
         alert(response.error.metadata.payment_id);
@@ -170,7 +169,7 @@ export default function StayDetail() {
           <div className='flex flex-row items-center gap-12'>
 
             <div className='flex flex-row items-center'>
-              <Button className='bg-secondary-foreground py-2 px-5 rounded-lg  text-3xl' onClick={() => setAmount((prev) => prev - 1)}>-</Button>
+              <Button className='bg-secondary-foreground py-2 px-5 rounded-lg  text-3xl' onClick={() => setAmount((prev) => prev>0?prev - 1:prev)}>-</Button>
               <span className='py-4 px-6 rounded-lg'>{amount}</span>
               <Button className='bg-secondary-foreground py-2 px-4 rounded-lg text-3xl' onClick={() => setAmount((prev) => prev + 1)}>+</Button>
             </div>
