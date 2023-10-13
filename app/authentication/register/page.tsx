@@ -78,6 +78,7 @@ export default function Register() {
                       username: data.name,
                       useremail: data.email,
                       userphone: data.phone,
+                      affordable:2000,
                     });
                   
                 }

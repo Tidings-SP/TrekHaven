@@ -69,9 +69,7 @@ async function getDocRef(hid: string) {
 
   querySnapshot.forEach((doc) => {
     rrRef = doc.ref;
-    if (rrRef) {
-      console.log("Document reference found");
-    }
+    
   });
 
   if (rrRef) {
@@ -116,6 +114,10 @@ export default function RatingsFragment({ hid }:any) {
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   async function updateOverallRate() {
+    if (rr.length === 0) {
+    // Handle the case when there are no ratings (avoid division by zero)
+    return;
+  }
     const orr = String(rr.reduce((sum, item) => sum + item.rating, 0)/rr.length)
     await updateDoc(doc(db, "hotels", hid), {
   rate: orr,

@@ -148,6 +148,7 @@ async function setDatabase(
         ispublished: true,
         rate: "0",
         ref: ref,
+        affordable:1000,
       }).then(() => {
 
         resolve(true);

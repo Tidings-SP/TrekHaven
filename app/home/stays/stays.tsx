@@ -1,12 +1,10 @@
 "use client"
 import Image from "next/image";
-import img from "@/assets/imgSample.webp"
 import { useEffect, useState } from "react";
-import { onSnapshot, query, where, collection, and } from "firebase/firestore";
+import { onSnapshot, query, where, collection, and, arrayUnion, doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/app/authentication/firebase";
 import { useRouter } from "next/navigation";
 import { BsFillStarFill } from "react-icons/bs";
-import { CgProfile } from "react-icons/cg";
 import { BsSearch } from "react-icons/bs";
 import { ModeToggle } from "@/components/ui/toggle-mode";
 import { Input } from "@/components/ui/input";
@@ -15,13 +13,22 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Avatar } from "@radix-ui/react-avatar";
-import email from "next-auth/providers/email";
-import { signOut } from "next-auth/react";
 import { ProfileNav } from "@/components/navbar/profile-nav";
+import { onAuthStateChanged } from "firebase/auth";
+
+async function addImpression(uid:any, local:string, price:number) {
+  if(uid) {
+    const ref = doc(db, "user", uid);
+    const aford = (await getDoc(ref)).data()?.affordable
+    await updateDoc(ref, {
+      location: arrayUnion(local),
+      affordable: (aford + price/2)/2,
+    })
+  }
+
+}
 
 const variants = {
   open: { opacity: 1, y: 0, height: 350 },
@@ -34,6 +41,16 @@ export default function Stays() {
   const [topRate, setTopRate] = useState<number>(0);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [open, setOpen] = useState(0);
+  let uid = auth.currentUser?.uid;
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is authenticated, update uid
+      uid = user.uid;
+    } else {
+      console.log("Not logged in")
+    }
+  });
+  
   const [stays, setStays] = useState<{
     id: string;
     name: string;
@@ -67,7 +84,7 @@ export default function Stays() {
     });
 
     return () => unsubscribe(); // Cleanup when the component unmounts
-  }, [price, topRate]);
+  }, []);
 
   const filteredStays = stays.filter((stay) => {
     const amenitiesFilter = selectedItems.length === 0 || selectedItems.every(item => stay.items.includes(item));
@@ -95,9 +112,7 @@ export default function Stays() {
     return searchTermMatch && priceMatch && rateMatch && amenitiesMatch;
   });
 
-  useEffect(() => {
-    console.log(selectedItems);
-  }, [selectedItems]);
+  
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { id, checked } = event.target;
@@ -109,8 +124,8 @@ export default function Stays() {
   };
 
 
-  function handleOnClick(id: string) {
-
+  function handleOnClick(id: string, location:string, price:number) {
+    addImpression(uid, location, price)
     router.push(`/home/stays/stay-detail?id=${id}`)
   }
 
@@ -320,7 +335,7 @@ export default function Stays() {
             <div
               className=" shadow-lg rounded-lg hover:bg-secondary cursor-pointer"
               key={card.id}
-              onClick={() => handleOnClick(card.id)} >
+              onClick={() => handleOnClick(card.id, card.location, card.price)} >
               <div className="flex items-center justify-center   ">
                 <div className="flex w-[100%] h-[100%] overflow-hidden items-center justify-center">
 
