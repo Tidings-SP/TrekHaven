@@ -1,96 +1,101 @@
-"use client"
+import React, { useEffect, useRef, useState } from 'react';
+import { DateRange } from 'react-date-range';
+import format from 'date-fns/format';
+import { addDays } from 'date-fns';
+import 'react-date-range/dist/styles.css'
+import 'react-date-range/dist/theme/default.css'
 
-import * as React from "react"
-import { addDays, format, isAfter, isBefore } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { DateRange } from "react-day-picker"
-
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { useEffect } from "react"
-
-export function CalendarForm({
-  className,
-}: React.HTMLAttributes<HTMLDivElement>) {
-  const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 20),
-  })
-  const disabledDateRanges = [
-    { start: new Date("2023-10-13"), end: new Date("2023-10-15") },
-    { start: new Date("2023-10-20"), end: new Date("2023-10-25") },
-  ];
-  const isDisabled = (selected: any) => {
-    if (!selected) {
-      return false; // No selection, not disabled
+export default function CalendarForm() {
+  // date state
+  const [range, setRange] = useState<any>([ // Use Range[] here
+    {
+      startDate: addDays(new Date(), 1),
+      endDate: addDays(new Date(), 4),
+      key: 'selection'
     }
-  
-    for (const disabledRange of disabledDateRanges) {
-      if (
-        isBefore(selected.to, disabledRange.start) ||
-        isAfter(selected.from, disabledRange.end)
-      ) {
-        continue; // No overlap, not disabled
-      }
-      return true; // Overlaps with a disabled range
+  ]);
+
+  function generateDateList (startDate: Date, endDate: Date) {
+    const dateList = [];
+    let currentDate = startDate;
+
+    while (currentDate <= endDate) {
+      dateList.push(currentDate);
+      currentDate = addDays(currentDate, 1);
     }
-    return false; // No overlap with any disabled range
+
+    setDateList(dateList); // Set the generated date list in state
   };
+  const [dateList, setDateList] = useState<Date[]>([]);
+  useEffect(()=>{
+    generateDateList(range[0].startDate, range[0].endDate);
+    
+  },[range])
   
+
+  // open close
+  const [open, setOpen] = useState(false);
+
+  // get the target element to toggle
+  const refOne = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    console.log(date)
-  },[date])
+    // event listeners
+    document.addEventListener('keydown', hideOnEscape, true);
+    document.addEventListener('click', hideOnClickOutside, true);
+    
+    return () => {
+      document.removeEventListener('keydown', hideOnEscape, true);
+      document.removeEventListener('click', hideOnClickOutside, true);
+    };
+  }, []);
+
+  // hide dropdown on ESC press
+  const hideOnEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setOpen(false);
+    }
+  };
+
+  // Hide on outside click
+  const hideOnClickOutside = (e: MouseEvent) => {
+    if (refOne.current && !refOne.current.contains(e.target as Node)) {
+      
+      setOpen(false);
+    }
+  };
+
+  const handleDateChange = (newRange:any) => {
+    const newStartDate = newRange[0].startDate;
+    if (newStartDate > addDays(new Date(), -1)) {
+      setRange(newRange);
+    }
+  };
+
   return (
-    <div className={cn("grid gap-2", className)}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            id="date"
-            variant={"outline"}
-            className={cn(
-              "w-[300px] justify-start text-left font-normal",
-              !date && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
-                </>
-              ) : (
-                format(date.from, "LLL dd, y")
-              )
-            ) : (
-              <span>Pick a date</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={(selected) => {
-              if (!isDisabled(selected)) {
-                setDate(selected);
-              }
-            }}
-            disabled={(d) =>
-              d < addDays(new Date(), -1)
-            }
-            numberOfMonths={2}
+    <div >
+      <input
+        value={`${format(range[0].startDate, "MM/dd/yyyy")} to ${format(range[0].endDate, "MM/dd/yyyy")}`}
+        readOnly
+        className="inputBox"
+        onClick={() => setOpen(open => !open)}
+      />
+
+      <div ref={refOne}>
+        {open && 
+          <DateRange
+         
+            onChange={item => handleDateChange([item.selection])}
+            editableDateInputs={true}
+            moveRangeOnFirstSelection={false}
+            ranges={range}
+            months={2}
+            disabledDates={[]}
+            direction="horizontal"
+            className="calendarElement"
           />
-        </PopoverContent>
-      </Popover>
+        }
+      </div>
     </div>
-  )
+  );
 }

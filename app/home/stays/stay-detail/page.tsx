@@ -5,41 +5,53 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import img from "@/assets/imgSample.webp"
 import { auth, db } from "@/app/authentication/firebase";
-import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
+import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
 import Ratings from "./ratings/page";
 import RatingsFragment from "./ratings/page";
-import { Star } from "lucide-react";
+import { CalendarIcon, Star } from "lucide-react";
 import { BsStarFill } from "react-icons/bs";
 import { Rating } from "react-simple-star-rating";
 import { onAuthStateChanged } from "firebase/auth";
-import { ref } from "firebase/storage";
+
+import { addDays, format } from "date-fns"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils";
+import { DateRange } from "react-date-range";
+import 'react-date-range/dist/styles.css'
+import 'react-date-range/dist/theme/default.css'
 
 type Stay = {
   id: string;
-  createrid:string;
+  createrid: string;
   name: string;
   desc: string;
   price: number;
   rate: number;
   ref: string;
 };
-async function add(uid:string, hid:string, hname:string , createrid:string,pid:string,price:number, status:string) {
+async function add(uid: string, hid: string, hname: string, createrid: string, pid: string, price: number, status: string) {
   await addDoc(collection(db, "history"), {
-    userid:uid,
-    createrid:createrid,
-    hname: hname, 
+    userid: uid,
+    createrid: createrid,
+    hname: hname,
     price: price,
-    pid:pid,
-    hotelid:hid,
-    time:new Date().toLocaleString(),
-    status:status,
+    pid: pid,
+    hotelid: hid,
+    time: new Date().toLocaleString(),
+    status: status,
   });
 }
 export default function StayDetail() {
+  const [amount, setAmount] = useState(1);
   const [stay, setStay] = useState<Stay | null>(null);
+  const [disableDate, setDisableDate] = useState<Date[]>([]);
   const searchParams = useSearchParams();
   const id = searchParams?.get("id");
-  let uid:string;
+  let uid: string;
   onAuthStateChanged(auth, (user) => {
     if (user) {
       // User is authenticated, update uid
@@ -58,7 +70,7 @@ export default function StayDetail() {
           if (stayData) {
             setStay({
               id: docSnapshot.id,
-              createrid:stayData.createrid,
+              createrid: stayData.createrid,
               name: stayData.name,
               desc: stayData.desc,
               price: stayData.price,
@@ -73,12 +85,18 @@ export default function StayDetail() {
 
     fetchStay();
   }, [id]);
+
+  useEffect(()=>{
+    getReservedDates()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[])
+
   
 
 
-  const [amount, setAmount] = useState(1);
 
 
+ 
 
   const handlePayment = async () => {
     const res = await initializeRazorpay();
@@ -93,11 +111,12 @@ export default function StayDetail() {
         key_secret: 'BroTkDeQFB3d76yavmpxMQAZ',
         name: "Trex Haven",
         currency: "INR",
-        amount: stay.price * 100,
+        amount: amount * stay.price * 100,
         description: "Enjoy your stay!",
         handler: function (response: any) {
-          // Validate payment at server - using webhooks is a better idea.
-          add(uid, stay.id, stay.name ,stay.createrid, response.razorpay_payment_id, stay.price, "success")
+          // Validate payment at server 
+          add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, stay.price, "success")
+          reserveDates();
           alert(response.razorpay_payment_id);
 
         },
@@ -113,7 +132,7 @@ export default function StayDetail() {
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.on('payment.failed', function (response: any) {
-        add(uid, stay.id,stay.name, stay.createrid, response.error.metadata.payment_id, stay.price, "fail")
+        add(uid, stay.id, stay.name, stay.createrid, response.error.metadata.payment_id, stay.price, "fail")
         alert(response.error.code);
         alert(response.error.reason);
         alert(response.error.metadata.payment_id);
@@ -142,15 +161,70 @@ export default function StayDetail() {
     });
   };
 
+  // date state
+  const [range, setRange] = useState<any>([ // Use Range[] here
+    {
+      startDate: addDays(new Date(), 1),
+      endDate: addDays(new Date(), 1),
+      key: 'selection'
+    }
+  ]);
+  const handleDateChange = (newRange:any) => {
+    const newStartDate = newRange[0].startDate;
+    if (newStartDate > addDays(new Date(), -1)) {
+      setRange(newRange);
+    }
+  };
+  function generateDateList (startDate: Date, endDate: Date) {
+    const dateList = [];
+    let currentDate = startDate;
+    let count = 0;
+    while (currentDate <= endDate) {
+      dateList.push(currentDate);
+      count += 1;
+      currentDate = addDays(currentDate, 1);
+    }
+    setAmount(count)
+    setDateList(dateList); // Set the generated date list in state
+  };
+  const [dateList, setDateList] = useState<Date[]>([]);
+  useEffect(()=>{
+    generateDateList(range[0].startDate, range[0].endDate);
+    
+  },[range])
+  async function reserveDates() {
+    if(id) {
+      dateList.forEach((date) => {
+        const ref = doc(db, 'hotels', id); // Replace with your actual collection and document
+      console.log(date)
+        updateDoc(ref, {
+          reservedates: arrayUnion(date),
+        });
+      });
+  }
+}
+  async function getReservedDates() {
+    if(id) {
+
+      const snap = await getDoc(doc(db, "hotels", id));
+      if (snap.exists()) {
+        const timestamps = snap.data().reservedates;
+        const dateList = timestamps.map((timestamp: { toDate: () => any; }) => {
+          return timestamp.toDate(); // Convert Firestore Timestamp to Date
+        });
+        setDisableDate(dateList);
+      }
+    }
+  }
 
   return (
     <>
       <div className='flex flex-col justify-between lg:flex-row gap-16 lg:items-center p-5'>
         <div className='flex flex-col gap-6 lg:w-2/4'>
-          <Image src={(stay)?stay.ref:"/"} 
-          width={500}
-          height={500}
-          alt="Image by publisher" className='w-full h-full aspect-square object-cover rounded-xl' />
+          <Image src={(stay) ? stay.ref : "/"}
+            width={500}
+            height={500}
+            alt="Image by publisher" className='w-full h-full aspect-square object-cover rounded-xl' />
 
         </div>
         {/* ABOUT */}
@@ -165,20 +239,62 @@ export default function StayDetail() {
           </p>
           <h6 className='text-2xl font-semibold'>₹ {stay?.price}</h6>
 
-          <h6 className='text-2xl font-semibold mt-2 ms-2'>Room Count</h6>
-          <div className='flex flex-row items-center gap-12'>
+          <h6 className='text-2xl font-semibold mt-2 ms-2'>Reserve Your Dates</h6>
+          <div className='flex md:flex-row flex-col  gap-12'>
 
             <div className='flex flex-row items-center'>
-              <Button className='bg-secondary-foreground py-2 px-5 rounded-lg  text-3xl' onClick={() => setAmount((prev) => prev>0?prev - 1:prev)}>-</Button>
-              <span className='py-4 px-6 rounded-lg'>{amount}</span>
-              <Button className='bg-secondary-foreground py-2 px-4 rounded-lg text-3xl' onClick={() => setAmount((prev) => prev + 1)}>+</Button>
+              <div className={cn("grid gap-2")}>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="date"
+                      variant={"outline"}
+                      className={cn(
+                        "w-[300px] justify-start text-left font-normal",
+                        !range[0] && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {range[0].startDate ? (
+                        range[0].endDate ? (
+                          <>
+                            {format(range[0].startDate, "LLL dd, y")} -{" "}
+                            {format(range[0].endDate, "LLL dd, y")}
+                          </>
+                        ) : (
+                          format(range[0].startDate, "LLL dd, y")
+                        )
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <DateRange
+
+                      onChange={item => handleDateChange([item.selection])}
+                      editableDateInputs={true}
+                      moveRangeOnFirstSelection={false}
+                      ranges={range}
+                      months={2}
+                      disabledDates={disableDate}
+                      direction="horizontal"
+                      className="calendarElement"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
+            <div className="flex flex-col gap-2 items-center">
             <Button onClick={handlePayment} className=' text-white font-semibold py-3 px-16 rounded-xl h-full'>Book Now</Button>
+            <h1 className="text-primary ">Total Price: ₹{amount*(stay?stay.price:0)}</h1>
+
+            </div>
           </div>
 
           <h6 className='flex items-center text-xl font-semibold mt-2 ms-2'>Overall Rating:
             <Rating
-            className="mb-1"
+              className="mb-1"
               size={25}
               initialValue={stay?.rate}
               readonly={true}

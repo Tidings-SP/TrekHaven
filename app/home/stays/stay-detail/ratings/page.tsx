@@ -33,7 +33,6 @@ onAuthStateChanged(auth, (user) => {
     // User is authenticated, update uid
     name = user.displayName
     uid = user.uid;
-    console.log(uid)
   }
 });
 const FormSchema = z.object({
