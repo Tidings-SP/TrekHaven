@@ -137,7 +137,7 @@ export default function UserDash() {
   }
   const filteredStays = shuffledStays.filter((stay) => {
 
-    const priceFilter = stay.price >= (prec - 4000) && stay.price <= (prec + 4000);
+    const priceFilter = stay.price >= (prec - (prec*0.6)) && stay.price <= (prec + (prec*0.6));
 // Filter by price around (within 2000 range)
     const locationFilter = loc.includes(stay.location); // Filter by location
 

@@ -18,13 +18,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { ProfileNav } from "@/components/navbar/profile-nav";
 import { onAuthStateChanged } from "firebase/auth";
 
-async function addImpression(uid:any, local:string, price:number) {
-  if(uid) {
+async function addImpression(uid: any, local: string, price: number) {
+  if (uid) {
     const ref = doc(db, "user", uid);
     const aford = (await getDoc(ref)).data()?.affordable
     await updateDoc(ref, {
       location: arrayUnion(local),
-      affordable: (aford + price/2)/2,
+      affordable: (aford + price / 2) / 2,
     })
   }
 
@@ -50,7 +50,7 @@ export default function Stays() {
       console.log("Not logged in")
     }
   });
-  
+
   const [stays, setStays] = useState<{
     id: string;
     name: string;
@@ -112,7 +112,7 @@ export default function Stays() {
     return searchTermMatch && priceMatch && rateMatch && amenitiesMatch;
   });
 
-  
+
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { id, checked } = event.target;
@@ -124,7 +124,7 @@ export default function Stays() {
   };
 
 
-  function handleOnClick(id: string, location:string, price:number) {
+  function handleOnClick(id: string, location: string, price: number) {
     addImpression(uid, location, price)
     router.push(`/home/stays/stay-detail?id=${id}`)
   }
@@ -141,7 +141,7 @@ export default function Stays() {
             </div>
             <div className="flex text-[30px] mt-2 sm:hidden">
 
-            <ProfileNav/>
+              <ProfileNav />
             </div>
 
           </div>
@@ -328,39 +328,46 @@ export default function Stays() {
         </motion.div>
       </div>
       {/* Body */}
-      <main className="container mx-auto py-8 px-8">
-        <h1 className="text-2xl font-bold pb-3">Find Best Stays!</h1>
-        <div className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-1 gap-6">
-          {filteredStays.map(card => (
-            <div
-              className=" shadow-lg rounded-lg hover:bg-secondary cursor-pointer"
-              key={card.id}
-              onClick={() => handleOnClick(card.id, card.location, card.price)} >
-              <div className="flex items-center justify-center   ">
-                <div className="flex w-[100%] h-[100%] overflow-hidden items-center justify-center">
+      {
+        stays.length == 0 ? (
+          <div className='text-center text-lg text-primary m-10'>Loading...</div>
+        ) : (
+          <main className="container mx-auto py-8 px-8">
+            <h1 className="text-2xl font-bold pb-3">Find Best Stays!</h1>
+            <div className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-1 gap-6">
+              {filteredStays.map(card => (
+                <div
+                  className=" shadow-lg rounded-lg hover:bg-secondary cursor-pointer"
+                  key={card.id}
+                  onClick={() => handleOnClick(card.id, card.location, card.price)} >
+                  <div className="flex items-center justify-center   ">
+                    <div className="flex w-[100%] h-[100%] overflow-hidden items-center justify-center">
 
-                  <Image
-                    className="rounded-lg"
-                    src={card.ref}
-                    width={240}
-                    height={240}
-                    alt="Picture posted by the author"></Image>
+                      <Image
+                        className="rounded-lg"
+                        src={card.ref}
+                        width={240}
+                        height={240}
+                        alt="Picture posted by the author"></Image>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-xl font-bold mb-3 line-clamp-1">{card.name}</h3>
+                    <p className="text-lg font-normal line-clamp-2">{card.desc}</p>
+                  </div>
+
+                  <div className="flex flex-row text-xl justify-between p-5 m-4">
+                    <div className="flex float-left">₹ {card.price}</div>
+                    <div className="flex float-right items-center">{Number(card.rate).toFixed(1)} <BsFillStarFill className="ms-3 mb-1" color="yellow" /></div>
+                  </div>
                 </div>
-              </div>
-              <div className="p-5">
-                <h3 className="text-xl font-bold mb-3 line-clamp-1">{card.name}</h3>
-                <p className="text-lg font-normal line-clamp-2">{card.desc}</p>
-              </div>
 
-              <div className="flex flex-row text-xl justify-between p-5 m-4">
-                <div className="flex float-left">₹ {card.price}</div>
-                <div className="flex float-right items-center">{Number(card.rate).toFixed(1)} <BsFillStarFill className="ms-3 mb-1" color="yellow" /></div>
-              </div>
+              ))}
             </div>
+          </main>
+        )
+      }
 
-          ))}
-        </div>
-      </main>
     </>
 
   )

@@ -2,7 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import img from "@/assets/imgSample.webp"
 import { auth, db } from "@/app/authentication/firebase";
 import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import { DateRange } from "react-date-range";
 import 'react-date-range/dist/styles.css'
 import 'react-date-range/dist/theme/default.css'
+import { toast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 type Stay = {
   id: string;
@@ -32,6 +34,8 @@ type Stay = {
   price: number;
   rate: number;
   ref: string;
+  items: string[];
+
 };
 async function add(uid: string, hid: string, hname: string, createrid: string, pid: string, price: number, status: string) {
   await addDoc(collection(db, "history"), {
@@ -46,7 +50,7 @@ async function add(uid: string, hid: string, hname: string, createrid: string, p
   });
 }
 export default function StayDetail() {
-  const [amount, setAmount] = useState(1);
+  const [amount, setAmount] = useState(0);
   const [stay, setStay] = useState<Stay | null>(null);
   const [disableDate, setDisableDate] = useState<Date[]>([]);
   const searchParams = useSearchParams();
@@ -76,6 +80,8 @@ export default function StayDetail() {
               price: stayData.price,
               rate: stayData.rate,
               ref: stayData.ref,
+              items: stayData.items,
+
             });
           }
         }
@@ -86,17 +92,17 @@ export default function StayDetail() {
     fetchStay();
   }, [id]);
 
-  useEffect(()=>{
+  useEffect(() => {
     getReservedDates()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[])
+  }, [])
 
-  
+  // Define a ref for the Button element
+  const popoverRef = useRef<HTMLButtonElement | null>(null);
 
 
 
 
- 
 
   const handlePayment = async () => {
     const res = await initializeRazorpay();
@@ -161,6 +167,25 @@ export default function StayDetail() {
     });
   };
 
+  //Get Creater Data
+const [cid, setCid] = useState('');
+const [phone, setPhone] = useState('');
+  async function getCreaterData(stay:any) {
+    if(stay) {
+      const ref = doc(db, "user", stay.createrid);
+      const snap = await getDoc(ref)
+      if(snap.exists()) {
+        setCid(snap.data().username)
+        setPhone(snap.data().userphone)
+      }
+      console.log(stay.createrid)
+      
+    }
+  
+  }
+useEffect(()=>{
+  getCreaterData(stay)
+},[stay])
   // date state
   const [range, setRange] = useState<any>([ // Use Range[] here
     {
@@ -169,13 +194,13 @@ export default function StayDetail() {
       key: 'selection'
     }
   ]);
-  const handleDateChange = (newRange:any) => {
+  const handleDateChange = (newRange: any) => {
     const newStartDate = newRange[0].startDate;
     if (newStartDate > addDays(new Date(), -1)) {
       setRange(newRange);
     }
   };
-  function generateDateList (startDate: Date, endDate: Date) {
+  function generateDateList(startDate: Date, endDate: Date) {
     const dateList = [];
     let currentDate = startDate;
     let count = 0;
@@ -188,23 +213,23 @@ export default function StayDetail() {
     setDateList(dateList); // Set the generated date list in state
   };
   const [dateList, setDateList] = useState<Date[]>([]);
-  useEffect(()=>{
+  useEffect(() => {
     generateDateList(range[0].startDate, range[0].endDate);
-    
-  },[range])
+
+  }, [range])
   async function reserveDates() {
-    if(id) {
+    if (id) {
       dateList.forEach((date) => {
         const ref = doc(db, 'hotels', id); // Replace with your actual collection and document
-      console.log(date)
+        console.log(date)
         updateDoc(ref, {
           reservedates: arrayUnion(date),
         });
       });
+    }
   }
-}
   async function getReservedDates() {
-    if(id) {
+    if (id) {
 
       const snap = await getDoc(doc(db, "hotels", id));
       if (snap.exists()) {
@@ -244,9 +269,10 @@ export default function StayDetail() {
 
             <div className='flex flex-row items-center'>
               <div className={cn("grid gap-2")}>
-                <Popover>
+                <Popover >
                   <PopoverTrigger asChild>
                     <Button
+                      ref={popoverRef}
                       id="date"
                       variant={"outline"}
                       className={cn(
@@ -286,12 +312,13 @@ export default function StayDetail() {
               </div>
             </div>
             <div className="flex flex-col gap-2 items-center">
-            <Button onClick={handlePayment} className=' text-white font-semibold py-3 px-16 rounded-xl h-full'>Book Now</Button>
-            <h1 className="text-primary ">Total Price: ₹{amount*(stay?stay.price:0)}</h1>
+              <Button onClick={handlePayment
+              } className=' text-white font-semibold py-3 px-16 rounded-xl h-full'>Book Now</Button>
+              <h1 className="text-primary ">Total Price: ₹{amount * (stay ? stay.price : 0)}</h1>
 
             </div>
           </div>
-
+          <Toaster />
           <h6 className='flex items-center text-xl font-semibold mt-2 ms-2'>Overall Rating:
             <Rating
               className="mb-1"
@@ -300,14 +327,31 @@ export default function StayDetail() {
               readonly={true}
               SVGclassName="inline-block"
             /></h6>
+          <h6 className='flex items-center  font-semibold mt-2 ms-2'>Contact {cid} : {phone}</h6>
+
         </div>
 
 
 
-      </div>
-      {/* Reviews & Ratings*/}
-      {id && <RatingsFragment hid={id} />}
 
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2">
+
+        {/* Reviews & Ratings*/}
+        {id && <RatingsFragment hid={id} />}
+
+        <div className="m-10 p-4">
+          <h1  className="text-primary text-lg">What we offer!!</h1>
+          {stay && stay.items ? (
+            stay.items.map((i) => (
+              <li key={i}>
+                {i}
+              </li>
+            ))
+          ) : null}
+        </div>
+      </div>
 
     </>
   )
