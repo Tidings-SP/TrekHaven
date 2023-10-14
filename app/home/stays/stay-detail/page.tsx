@@ -35,6 +35,8 @@ type Stay = {
   rate: number;
   ref: string;
   items: string[];
+  state: string;
+  country: string;
 
 };
 async function add(uid: string, hid: string, hname: string, createrid: string, pid: string, price: number, status: string) {
@@ -81,7 +83,8 @@ export default function StayDetail() {
               rate: stayData.rate,
               ref: stayData.ref,
               items: stayData.items,
-
+              state: stayData.state,
+              country: stayData.country,
             });
           }
         }
@@ -328,6 +331,7 @@ useEffect(()=>{
               SVGclassName="inline-block"
             /></h6>
           <h6 className='flex items-center  font-semibold mt-2 ms-2'>Contact {cid} : {phone}</h6>
+          <h1 className='flex items-center text-primary  font-semibold mt-2 ms-2'>{stay?.state}, {stay?.country}</h1>
 
         </div>
 
