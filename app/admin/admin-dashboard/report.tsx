@@ -105,7 +105,7 @@ export default function ReportMetrics() {
       <CardHeader>
         <CardTitle>Revenue Chart</CardTitle>
         <CardDescription>
-          Actual and average revenue are drawn here!!...
+          Cumulative revenue is drawn here!!...
         </CardDescription>
       </CardHeader>
       <CardContent className="pb-4">
