@@ -86,7 +86,17 @@ export default function Stays() {
     return () => unsubscribe(); // Cleanup when the component unmounts
   }, []);
 
-  const filteredStays = stays.filter((stay) => {
+  function shuffleArray(array: any) {
+    const shuffledArray = [...array];
+    for (let i = shuffledArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+    }
+    return shuffledArray;
+  }
+
+  const filteredStays = shuffleArray(
+    stays.filter((stay) => {
     const amenitiesFilter = selectedItems.length === 0 || selectedItems.every(item => stay.items.includes(item));
     const searchTermLowerCase = searchTerm.toLowerCase();
     const nameLowerCase = stay.name.toLowerCase();
@@ -110,7 +120,8 @@ export default function Stays() {
 
     // Return true if all of the conditions are met
     return searchTermMatch && priceMatch && rateMatch && amenitiesMatch;
-  });
+  })
+  );
 
 
 

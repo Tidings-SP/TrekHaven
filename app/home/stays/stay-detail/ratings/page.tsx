@@ -74,7 +74,6 @@ async function getDocRef(hid: string) {
   if (rrRef) {
     return rrRef;
   } else {
-    console.log("No matching document reference found, creating a new one");
     rrRef = await addDoc(collection(db, "rr"), { hotelid: hid, userid: uid, });
     return rrRef;
   }
@@ -133,7 +132,6 @@ export default function RatingsFragment({ hid }:any) {
         userratings: rate,
 
       });
-    updateOverallRate()
 
 
     } else {
@@ -151,14 +149,11 @@ export default function RatingsFragment({ hid }:any) {
         querySnapshot.docs.map((doc) => ({ id: doc.id, name: doc.data().username, review: doc.data().userreview, rating: doc.data().userratings }))
       );
     });
-
-    
-
-    
     return () => unsubscribe(); // Cleanup when the component unmounts
   }, [hid]);
 
-  
+    
+    useEffect(()=>{updateOverallRate()})
 
   
 

@@ -257,7 +257,7 @@ export default function UserDash() {
                     onClick={() => {
                       router.push(`/home/stays/stay-detail?id=${order.hid}`)
                     }}
-                    className='hover:bg-secondary rounded-lg my-3 p-4 border flex items-center justify-between cursor-pointer'
+                    className='grid grid-cols-1 md:grid-cols-2 hover:bg-secondary rounded-lg my-3 p-4 border  items-center justify-between cursor-pointer'
                   >
                     <div>
                       <div className='font-bold'>{order.hname}</div>
