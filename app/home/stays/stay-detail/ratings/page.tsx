@@ -45,13 +45,28 @@ const FormSchema = z.object({
       message: "Review must not be longer than 300 characters.",
     }),
 })
-function authStatus() {
+function authStatus(hid:any) {
   return new Promise((resolve) => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        resolve(true); // User is signed in
+
+
+      onSnapshot(doc(db, "user", user.uid), (doc) => {
+        if(doc.data()?.historybooking.includes(hid)) {
+          resolve(true); 
+        } else {
+          toast({
+            title: "Only consumer of this stay are allowed to give ratings and review!"
+          })
+          resolve(false); 
+
+        }
+          
+      });
+
+
       } else {
-        console.log("User Not signin");
+        console.log("User Not signIn");
         resolve(false); // User is not signed in
       }
     });
@@ -80,7 +95,7 @@ async function getDocRef(hid: string) {
 }
 
 async function setDatabase(hotelid: string, username: string, userreview: string) {
-  if (await authStatus()) {
+  if (await authStatus(hotelid)) {
 
 
     await updateDoc(await getDocRef(hotelid), {
@@ -90,9 +105,7 @@ async function setDatabase(hotelid: string, username: string, userreview: string
       userreview: userreview,
     });
 
-  } else {
-    console.log("User Not exist")
-  }
+  } 
 
 
 }
@@ -106,8 +119,8 @@ export default function RatingsFragment({ hid }:any) {
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
 
-
     setDatabase(hid, name ? name : "Unknown Profile", data.review)
+   
 
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,7 +137,7 @@ export default function RatingsFragment({ hid }:any) {
   // Catch Rating value
   const handleRating = async (rate: number) => {
 
-    if (await authStatus()) {
+    if (await authStatus(hid)) {
 
 
       await updateDoc(await getDocRef(hid), {
@@ -134,9 +147,7 @@ export default function RatingsFragment({ hid }:any) {
       });
 
 
-    } else {
-      console.log("User Not exist:during rate")
-    }
+    } 
   }
 
   const [rr, setRR] = useState<{ id: string, name: string; review: string; rating: number }[]>([]);

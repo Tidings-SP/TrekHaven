@@ -3,7 +3,6 @@ import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
-import img from "@/assets/imgSample.webp"
 import { auth, db } from "@/app/authentication/firebase";
 import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
 import Ratings from "./ratings/page";
@@ -39,7 +38,7 @@ type Stay = {
   country: string;
 
 };
-async function add(uid: string, hid: string, hname: string, createrid: string, pid: string, price: number, status: string) {
+async function add(uid: string|undefined, hid: string, hname: string, createrid: string, pid: string, price: number, status: string) {
   await addDoc(collection(db, "history"), {
     userid: uid,
     createrid: createrid,
@@ -57,13 +56,19 @@ export default function StayDetail() {
   const [disableDate, setDisableDate] = useState<Date[]>([]);
   const searchParams = useSearchParams();
   const id = searchParams?.get("id");
-  let uid: string;
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // User is authenticated, update uid
-      uid = user.uid;
-    }
-  });
+  const [uid, setUid] = useState<string>()
+  useEffect(()=>{
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is authenticated, update uid
+        setUid(user.uid);
+      }
+    });
+
+    return () => unsubscribe();
+  },[])
+  
+  
   useEffect(() => {
     async function fetchStay() {
       if (id) {
@@ -104,9 +109,6 @@ export default function StayDetail() {
   const popoverRef = useRef<HTMLButtonElement | null>(null);
 
 
-
-
-
   const handlePayment = async () => {
     const res = await initializeRazorpay();
     if (!res) {
@@ -127,6 +129,7 @@ export default function StayDetail() {
           add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, stay.price, "success")
           reserveDates();
           alert(response.razorpay_payment_id);
+          window.location.reload();
 
         },
         prefill: {
@@ -181,7 +184,6 @@ const [phone, setPhone] = useState('');
         setCid(snap.data().username)
         setPhone(snap.data().userphone)
       }
-      console.log(stay.createrid)
       
     }
   
@@ -194,12 +196,15 @@ useEffect(()=>{
     {
       startDate: addDays(new Date(), 1),
       endDate: addDays(new Date(), 1),
-      key: 'selection'
+      key: 'selection',
+      status: false,
     }
   ]);
   const handleDateChange = (newRange: any) => {
     const newStartDate = newRange[0].startDate;
+    
     if (newStartDate > addDays(new Date(), -1)) {
+      newRange[0].status = true;
       setRange(newRange);
     }
   };
@@ -207,6 +212,7 @@ useEffect(()=>{
     const dateList = [];
     let currentDate = startDate;
     let count = 0;
+    
     while (currentDate <= endDate) {
       dateList.push(currentDate);
       count += 1;
@@ -229,6 +235,12 @@ useEffect(()=>{
           reservedates: arrayUnion(date),
         });
       });
+     if(uid) {
+      await updateDoc(doc(db, 'user', uid), {
+        historybooking: arrayUnion(id),
+      })
+     }
+      
     }
   }
   async function getReservedDates() {
@@ -272,10 +284,10 @@ useEffect(()=>{
 
             <div className='flex flex-row items-center'>
               <div className={cn("grid gap-2")}>
+                      
                 <Popover >
-                  <PopoverTrigger asChild>
+                  <PopoverTrigger ref={popoverRef} asChild>
                     <Button
-                      ref={popoverRef}
                       id="date"
                       variant={"outline"}
                       className={cn(
@@ -315,7 +327,18 @@ useEffect(()=>{
               </div>
             </div>
             <div className="flex flex-col gap-2 items-center">
-              <Button onClick={handlePayment
+              <Button onClick={
+                ()=>{
+                  if(range[0].status) {
+
+                    handlePayment()
+                  } else {
+                    toast({
+                      title: "Please pick a date!",
+                      variant: "destructive"
+                    })
+                  }
+                }
               } className=' text-white font-semibold py-3 px-16 rounded-xl h-full'>Book Now</Button>
               <h1 className="text-primary ">Total Price: ₹{amount * (stay ? stay.price : 0)}</h1>
 

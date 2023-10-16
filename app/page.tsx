@@ -16,7 +16,6 @@ import CalendarForm from './home/calander';
 
 
 export default function Home() {
-  
   return (
     <HomePage/>
 

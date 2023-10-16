@@ -25,7 +25,7 @@ async function addImpression(uid:any, local:string, price:number) {
 
 export default function UserDash() {
   const router = useRouter();
-  const [prec, setPrec] = useState(1000);
+  const [prec, setPrec] = useState(2000);
   const [loc, setLoc] = useState<string[]>([]);
   const [history, setHistory] = useState<{
     id: string;
