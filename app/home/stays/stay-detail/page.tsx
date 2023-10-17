@@ -25,6 +25,7 @@ import 'react-date-range/dist/styles.css'
 import 'react-date-range/dist/theme/default.css'
 import { toast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import { useRouter } from 'next/navigation';
 
 
 type Stay = {
@@ -58,6 +59,7 @@ export default function StayDetail() {
   const [disableDate, setDisableDate] = useState<Date[]>([]);
   const searchParams = useSearchParams();
   const id = searchParams?.get("id");
+  const router = useRouter()
   const [uid, setUid] = useState<string>()
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -109,31 +111,7 @@ export default function StayDetail() {
 
   // Define a ref for the Button element
   const popoverRef = useRef<HTMLButtonElement | null>(null);
-  const client = require('twilio')('ACaa8c9587478cda56cb9bf2453bf22fee', '0664514495c8bd5713ba58f119910d54');
-  const sendSMS = async (body: any) => {
-    let msgOptions = {
-
-      from: '+12529660072',
-      to: '+916379406269',
-      body
-    }
-    try {
-      const message = await client.messages.create({
-
-        from: '+12529660072',
-        to: '+916379406269',
-        body: "test"
-      });
-      console.log(message);
-    } catch (e) {
-      console.log(e);
-    }
-
-  }
- 
   
-  
-
 
   const handlePayment = async () => {
     const res = await initializeRazorpay();
@@ -155,8 +133,7 @@ export default function StayDetail() {
           add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, amount * stay.price, "success")
           reserveDates();
           alert(response.razorpay_payment_id);
-          window.location.reload();
-
+          router.push(`/home/stays/payment?id=${response.razorpay_payment_id}`)
         },
         prefill: {
           name: "TrekHavel",

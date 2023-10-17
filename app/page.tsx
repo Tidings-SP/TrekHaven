@@ -1,4 +1,3 @@
-'use client';
 import { redirect } from 'next/navigation';
 import Register from './authentication/register/page';
 import HomePage from './home/page';
@@ -12,12 +11,12 @@ import { auth } from './authentication/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import UserDash from './home/user/page';
-import PaymentSuccess from './home/stays/payment/payment-success';
+import PaymentSuccess from './home/stays/payment/page';
 
 
 export default function Home() {
   return (
-    <PaymentSuccess/>
+    <HomePage/>
 
   )
 }

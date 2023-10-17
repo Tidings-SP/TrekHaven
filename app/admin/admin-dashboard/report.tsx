@@ -94,7 +94,6 @@ export default function ReportMetrics() {
       cumulativeScore += Number(item.total);
       item.total = cumulativeScore;
     });
-    console.log(data)
 
     
   },[data])

@@ -1,26 +1,28 @@
+import { useSearchParams } from 'next/navigation';
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer'
 
-export async function POST() {
-    try {
-        // const { subject, message } = await request.json();
 
+export async function POST(request: Request) {
+    const res =await request.json();
+    try {
+        
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             
             auth: {
-                user: 'suryaprakashspro@gmail.com',
-                pass: 'wminxurjqxdbxtdf'
+                user: 'trekwithhaven@gmail.com',
+                pass: 'eormewadoybnjubi'
             }
         })
 
         const mailOption = {
             from: 'suryaprakashspro@gmail.com',
-            to: 'suryaprakashspro@gmail.com',
+            to: res.email,
             subject: 'Successful booking of stay with Trek Haven',
-      html: `<h1><strong>Enjoy your trip with</strong></h1>
-      <p> Thank you for making an accommodation booking worth ₹2000
-      here is your payment Id: testid.
+      html: `<h1>Enjoy your trip with ${res.name}</h1>
+      <p> Thank you for making an accommodation booking worth ₹${res.price}
+      here is your payment Id: <strong>${res.id}</strong>.
         `
         }
 
