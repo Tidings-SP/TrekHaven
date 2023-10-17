@@ -12,12 +12,12 @@ import { auth } from './authentication/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import UserDash from './home/user/page';
-import CalendarForm from './home/calander';
+import PaymentSuccess from './home/stays/payment/payment-success';
 
 
 export default function Home() {
   return (
-    <HomePage/>
+    <PaymentSuccess/>
 
   )
 }

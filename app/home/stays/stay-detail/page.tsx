@@ -1,4 +1,5 @@
 "use client"
+import { Resend } from 'resend';
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import 'react-date-range/dist/theme/default.css'
 import { toast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 
+
 type Stay = {
   id: string;
   createrid: string;
@@ -38,7 +40,7 @@ type Stay = {
   country: string;
 
 };
-async function add(uid: string|undefined, hid: string, hname: string, createrid: string, pid: string, price: number, status: string) {
+async function add(uid: string | undefined, hid: string, hname: string, createrid: string, pid: string, price: number, status: string) {
   await addDoc(collection(db, "history"), {
     userid: uid,
     createrid: createrid,
@@ -57,7 +59,7 @@ export default function StayDetail() {
   const searchParams = useSearchParams();
   const id = searchParams?.get("id");
   const [uid, setUid] = useState<string>()
-  useEffect(()=>{
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // User is authenticated, update uid
@@ -66,9 +68,9 @@ export default function StayDetail() {
     });
 
     return () => unsubscribe();
-  },[])
-  
-  
+  }, [])
+
+
   useEffect(() => {
     async function fetchStay() {
       if (id) {
@@ -107,6 +109,30 @@ export default function StayDetail() {
 
   // Define a ref for the Button element
   const popoverRef = useRef<HTMLButtonElement | null>(null);
+  const client = require('twilio')('ACaa8c9587478cda56cb9bf2453bf22fee', '0664514495c8bd5713ba58f119910d54');
+  const sendSMS = async (body: any) => {
+    let msgOptions = {
+
+      from: '+12529660072',
+      to: '+916379406269',
+      body
+    }
+    try {
+      const message = await client.messages.create({
+
+        from: '+12529660072',
+        to: '+916379406269',
+        body: "test"
+      });
+      console.log(message);
+    } catch (e) {
+      console.log(e);
+    }
+
+  }
+ 
+  
+  
 
 
   const handlePayment = async () => {
@@ -124,9 +150,9 @@ export default function StayDetail() {
         currency: "INR",
         amount: amount * stay.price * 100,
         description: "Enjoy your stay!",
-        handler: function (response: any) {
+        handler:  function (response: any) {
           // Validate payment at server 
-          add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, stay.price, "success")
+          add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, amount * stay.price, "success")
           reserveDates();
           alert(response.razorpay_payment_id);
           window.location.reload();
@@ -144,7 +170,7 @@ export default function StayDetail() {
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.on('payment.failed', function (response: any) {
-        add(uid, stay.id, stay.name, stay.createrid, response.error.metadata.payment_id, stay.price, "fail")
+        add(uid, stay.id, stay.name, stay.createrid, response.error.metadata.payment_id, amount * stay.price, "fail")
         alert(response.error.code);
         alert(response.error.reason);
         alert(response.error.metadata.payment_id);
@@ -173,24 +199,25 @@ export default function StayDetail() {
     });
   };
 
+
   //Get Creater Data
-const [cid, setCid] = useState('');
-const [phone, setPhone] = useState('');
-  async function getCreaterData(stay:any) {
-    if(stay) {
+  const [cid, setCid] = useState('');
+  const [phone, setPhone] = useState('');
+  async function getCreaterData(stay: any) {
+    if (stay) {
       const ref = doc(db, "user", stay.createrid);
       const snap = await getDoc(ref)
-      if(snap.exists()) {
+      if (snap.exists()) {
         setCid(snap.data().username)
         setPhone(snap.data().userphone)
       }
-      
+
     }
-  
+
   }
-useEffect(()=>{
-  getCreaterData(stay)
-},[stay])
+  useEffect(() => {
+    getCreaterData(stay)
+  }, [stay])
   // date state
   const [range, setRange] = useState<any>([ // Use Range[] here
     {
@@ -202,7 +229,7 @@ useEffect(()=>{
   ]);
   const handleDateChange = (newRange: any) => {
     const newStartDate = newRange[0].startDate;
-    
+
     if (newStartDate > addDays(new Date(), -1)) {
       newRange[0].status = true;
       setRange(newRange);
@@ -212,7 +239,7 @@ useEffect(()=>{
     const dateList = [];
     let currentDate = startDate;
     let count = 0;
-    
+
     while (currentDate <= endDate) {
       dateList.push(currentDate);
       count += 1;
@@ -235,12 +262,12 @@ useEffect(()=>{
           reservedates: arrayUnion(date),
         });
       });
-     if(uid) {
-      await updateDoc(doc(db, 'user', uid), {
-        historybooking: arrayUnion(id),
-      })
-     }
-      
+      if (uid) {
+        await updateDoc(doc(db, 'user', uid), {
+          historybooking: arrayUnion(id),
+        })
+      }
+
     }
   }
   async function getReservedDates() {
@@ -284,7 +311,7 @@ useEffect(()=>{
 
             <div className='flex flex-row items-center'>
               <div className={cn("grid gap-2")}>
-                      
+
                 <Popover >
                   <PopoverTrigger ref={popoverRef} asChild>
                     <Button
@@ -328,9 +355,9 @@ useEffect(()=>{
             </div>
             <div className="flex flex-col gap-2 items-center">
               <Button onClick={
-                ()=>{
-                  if(range[0].status) {
-
+                async () => {
+                  if (range[0].status) {
+                    
                     handlePayment()
                   } else {
                     toast({
@@ -369,7 +396,7 @@ useEffect(()=>{
         {id && <RatingsFragment hid={id} />}
 
         <div className="m-10 p-4">
-          <h1  className="text-primary text-lg">What we offer!!</h1>
+          <h1 className="text-primary text-lg">What we offer!!</h1>
           {stay && stay.items ? (
             stay.items.map((i) => (
               <li key={i}>
