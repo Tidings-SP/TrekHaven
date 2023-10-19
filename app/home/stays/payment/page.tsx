@@ -4,7 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { query, collection, and, where, onSnapshot } from "firebase/firestore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-
+import BarLoader from "react-spinners/BarLoader";
 export default function PaymentSuccess() {
   const searchParams = useSearchParams();
   const pid = searchParams?.get("id");
@@ -82,7 +82,11 @@ export default function PaymentSuccess() {
     <div className="flex items-center justify-center">
       <p className="text-primary text-xl p-8 m-4">You have made a successful booking! Please wait while redirecting...</p>
     </div>
-    
+    <div className="bottom-0 fixed w-full">
+
+      <BarLoader color="#22C45D" width='100%' height={5} />
+    </div>
+
     </>
   )
 }

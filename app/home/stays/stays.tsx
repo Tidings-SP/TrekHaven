@@ -7,11 +7,12 @@ import { useRouter } from "next/navigation";
 import { BsFillStarFill } from "react-icons/bs";
 import { BsSearch } from "react-icons/bs";
 import { ModeToggle } from "@/components/ui/toggle-mode";
+import PropagateLoader from "react-spinners/PropagateLoader";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, LogOut } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -166,7 +167,7 @@ export default function Stays() {
             <Input
               type="text"
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Enter any product name..."
+              placeholder="Enter any stay name..."
             />
 
             <BsSearch
@@ -341,7 +342,14 @@ export default function Stays() {
       {/* Body */}
       {
         stays.length == 0 ? (
-          <div className='text-center text-lg text-primary m-10'>Loading...</div>
+          <div className="flex justify-center ">
+            <div className='text-center text-lg text-primary m-10'>Loading...</div>
+
+            <div className="left-[48%] mt-4 fixed">
+            <PropagateLoader  color="#22C45D"/>
+
+            </div>
+          </div>
         ) : (
           <main className="container mx-auto py-8 px-8">
             <h1 className="text-2xl font-bold pb-3">Find Best Stays!</h1>

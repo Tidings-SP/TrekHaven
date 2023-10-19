@@ -9,6 +9,8 @@ import { BsFillStarFill, BsSearch } from "react-icons/bs";
 import { ModeToggle } from "@/components/ui/toggle-mode";
 import Link from "next/link";
 import { ProfileNav } from "@/components/navbar/profile-nav";
+import PropagateLoader from "react-spinners/PropagateLoader";
+
 
 async function addImpression(uid:any, local:string, price:number) {
   if(uid) {
@@ -248,7 +250,14 @@ export default function UserDash() {
           <h1 className="ps-5 pt-3 text-xl text-primary ">Booking History</h1>
           <div className='p-4'>
             {history.length === 0 ? (
-              <div className='text-center text-primary'>Loading...</div>
+              <div className="flex justify-center ">
+              <div className='text-center text-lg text-primary m-10'>Loading...</div>
+  
+              <div className="left-[48%] mt-4 fixed">
+              <PropagateLoader  color="#22C45D"/>
+  
+              </div>
+            </div>
             ) : (
               <div className='w-full m-auto p-4 border rounded-lg  overflow-y-auto'>
                 {history.map((order) => (
