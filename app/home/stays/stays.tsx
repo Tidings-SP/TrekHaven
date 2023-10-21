@@ -98,30 +98,30 @@ export default function Stays() {
 
   const filteredStays = shuffleArray(
     stays.filter((stay) => {
-    const amenitiesFilter = selectedItems.length === 0 || selectedItems.every(item => stay.items.includes(item));
-    const searchTermLowerCase = searchTerm.toLowerCase();
-    const nameLowerCase = stay.name.toLowerCase();
-    const descLowerCase = stay.desc.toLowerCase();
-    const locationLowerCase = stay.location.toLowerCase();
+      const amenitiesFilter = selectedItems.length === 0 || selectedItems.every(item => stay.items.includes(item));
+      const searchTermLowerCase = searchTerm.toLowerCase();
+      const nameLowerCase = stay.name.toLowerCase();
+      const descLowerCase = stay.desc.toLowerCase();
+      const locationLowerCase = stay.location.toLowerCase();
 
-    // Check if either the name or description contains the search term
-    const searchTermMatch =
-      nameLowerCase.includes(searchTermLowerCase) ||
-      descLowerCase.includes(searchTermLowerCase) ||
-      locationLowerCase.includes(searchTermLowerCase);
+      // Check if either the name or description contains the search term
+      const searchTermMatch =
+        nameLowerCase.includes(searchTermLowerCase) ||
+        descLowerCase.includes(searchTermLowerCase) ||
+        locationLowerCase.includes(searchTermLowerCase);
 
-    // Check if the price condition is met
-    const priceMatch = price === 0 || stay.price >= price;
+      // Check if the price condition is met
+      const priceMatch = price === 0 || stay.price >= price;
 
-    // Check if the rate (rating) condition is met
-    const rateMatch = topRate === 0 || stay.rate >= topRate;
+      // Check if the rate (rating) condition is met
+      const rateMatch = topRate === 0 || stay.rate >= topRate;
 
-    // Check if the selected amenities are all included in the stay's amenities
-    const amenitiesMatch = amenitiesFilter;
+      // Check if the selected amenities are all included in the stay's amenities
+      const amenitiesMatch = amenitiesFilter;
 
-    // Return true if all of the conditions are met
-    return searchTermMatch && priceMatch && rateMatch && amenitiesMatch;
-  })
+      // Return true if all of the conditions are met
+      return searchTermMatch && priceMatch && rateMatch && amenitiesMatch;
+    })
   );
 
 
@@ -346,7 +346,7 @@ export default function Stays() {
             <div className='text-center text-lg text-primary m-10'>Loading...</div>
 
             <div className="left-[48%] mt-4 fixed">
-            <PropagateLoader  color="#22C45D"/>
+              <PropagateLoader color="#22C45D" />
 
             </div>
           </div>

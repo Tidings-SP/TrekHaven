@@ -68,46 +68,48 @@ export default function Register() {
         }
         createUserWithEmailAndPassword(auth, data.email, data.password)
             .then(async () => {
-                if(auth.currentUser){
+                if (auth.currentUser) {
                     updateProfile(auth.currentUser, {
-                    displayName: data.name,
-                  })
+                        displayName: data.name,
+                    })
 
-                  
+
                     await setDoc(doc(db, "user", auth.currentUser.uid), {
-                      username: data.name,
-                      useremail: data.email,
-                      userphone: data.phone,
-                      affordable:2000,
+                        username: data.name,
+                        useremail: data.email,
+                        userphone: data.phone,
+                        affordable: 2000,
                     });
-                  
+
                 }
-                
+
                 signInWithEmailAndPassword(auth, data.email, data.password)
-                    .then(() => { 
-                        
-                        
+                    .then(() => {
+
+
                         toast(
                             {
                                 title: "Account created successfully!",
                             }
                         )
-                        router.push('/home') })
-                    .catch((error) => { 
+                        router.push('/home')
+                    })
+                    .catch((error) => {
                         toast(
                             {
                                 title: "Something went wrong:(",
                                 variant: "destructive",
                             });
-                        console.log(error); })
+                        console.log(error);
+                    })
             })
-            .catch((error) => { 
+            .catch((error) => {
                 toast(
                     {
                         title: "Something went wrong:(",
                         variant: "destructive",
                     });
-                     });
+            });
 
     }
 
@@ -138,7 +140,13 @@ export default function Register() {
                                             <FormItem>
                                                 <FormLabel>Name</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="Enter your name..." {...field} />
+                                                    <Input
+                                                        onKeyDown={(event) => {
+                                                            if (!/[a-z]/i.test(event.key)) {
+                                                                event.preventDefault(); // Prevent input of characters that do not match the regular expression.
+                                                            }
+                                                        }}
+                                                        placeholder="Enter your name..." {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -166,7 +174,23 @@ export default function Register() {
                                             <FormItem>
                                                 <FormLabel>Phone Number</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="Enter your phone number..." {...field} />
+                                                    <Input
+                                                        type="number"
+                                                        onKeyDown={(event) => {
+                                                            const inputElement = event.target as HTMLInputElement;
+                                                            const key = event.key;
+
+                                                            // Allow backspace (keyCode 8) and only digits if the limit is not reached
+                                                            if (
+                                                                (key === "Backspace" || /^\d$/.test(key)) &&
+                                                                (inputElement.value.length < 10 || key === "Backspace")
+                                                            ) {
+                                                                return; // Allow the keypress
+                                                            }
+
+                                                            event.preventDefault(); // Prevent other keypresses
+                                                        }}
+                                                        placeholder="Enter your phone number..." {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -213,6 +237,23 @@ export default function Register() {
                                                 <FormLabel>Confirm Password</FormLabel>
                                                 <FormControl>
                                                     <Input placeholder="Please verify your password..." type="password" tabIndex={-1} {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* DOB */}
+                                    <FormField
+                                        control={form.control}
+                                        name="dob"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>DOB</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="date"
+                                                        {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

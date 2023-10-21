@@ -1,5 +1,32 @@
 import { z } from "zod";
 
+const isDateOfBirthValid = (dateString: string) => {
+    const dateOfBirth = new Date(dateString);
+    const currentDate = new Date();
+    const ageDiff = currentDate.getFullYear() - dateOfBirth.getFullYear();
+  
+    if (ageDiff < 18) {
+      return false;
+    }
+  
+    if (
+      ageDiff === 18 &&
+      currentDate.getMonth() < dateOfBirth.getMonth()
+    ) {
+      return false;
+    }
+  
+    if (
+      ageDiff === 18 &&
+      currentDate.getMonth() === dateOfBirth.getMonth() &&
+      currentDate.getDate() < dateOfBirth.getDate()
+    ) {
+      return false;
+    }
+  
+    return true;
+  };
+
 export const registerSchema = z.object({
     email: z.string().email(),
     name: z.string().min(3).max(20),
@@ -17,8 +44,14 @@ export const registerSchema = z.object({
           /\d/.test(password) &&
           /[!@#$%^&*()_+[\]{};':"\\|,.<>/?]+/.test(password);
       },{message:"The password should contain both upper case and lower case and atleast a digit, special charter "}),
-    confirmPassword: z.string().min(6).max(50)
+    confirmPassword: z.string().min(6).max(50),
+    dob:z.string()
+    .refine(isDateOfBirthValid, {
+      message: "Date of birth must be greater than or equal to 18 years ago",
+    }),
 });
+
+  
 
 export const signinSchema = z.object({
     email: z.string().email(),
