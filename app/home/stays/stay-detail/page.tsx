@@ -61,6 +61,9 @@ export default function StayDetail() {
   const id = searchParams?.get("id");
   const router = useRouter()
   const [uid, setUid] = useState<string>()
+  const [uname, setUname] = useState<string>()
+  const [uemail, setUemail] = useState<string>()
+  const [uphone, setUphone] = useState<string>()
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -71,7 +74,27 @@ export default function StayDetail() {
 
     return () => unsubscribe();
   }, [])
+// Get user data
+useEffect(() => {
+  async function fetch() {
+    if (uid) {
+      const snap = await getDoc(doc(db, "user", uid));
+      if(snap.exists()){
+        setUphone(snap.data().userphone);
+        setUemail(snap.data().useremail);
+        setUname(snap.data().username);
 
+
+        
+      }
+
+    }
+  }
+
+  fetch();
+
+
+}, [uid])
 
   useEffect(() => {
     async function fetchStay() {
@@ -132,13 +155,14 @@ export default function StayDetail() {
           // Validate payment at server 
           add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, amount * stay.price, "success")
           reserveDates();
+          sendMail(response.razorpay_payment_id);
           alert(response.razorpay_payment_id);
           router.push(`/home/stays/payment?id=${response.razorpay_payment_id}`)
         },
         prefill: {
-          name: "TrekHavel",
-          email: "TrekHaven@example.com",
-          contact: "3333333333",
+          name: uname,
+          email: uemail,
+          contact: "91"+uphone,
         },
 
 
@@ -176,9 +200,28 @@ export default function StayDetail() {
     });
   };
 
+  //Send Mail
+  async function sendMail(id:any) {
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: cemail,
+        name: uname,
+        hname: stay?.name,
+        date: String(range[0].startDate+" to "+range[0].endDate),
+        price: (amount * (stay?(stay.price):0)),
+        total: ((disableDate.length * (stay?(stay.price):0)) + (amount * (stay?(stay.price):0))),
+        id:id,
+      })
+    });
+  }
 
   //Get Creater Data
   const [cid, setCid] = useState('');
+  const [cemail, setCemail] = useState('');
   const [phone, setPhone] = useState('');
   async function getCreaterData(stay: any) {
     if (stay) {
@@ -187,6 +230,7 @@ export default function StayDetail() {
       if (snap.exists()) {
         setCid(snap.data().username)
         setPhone(snap.data().userphone)
+        setCemail(snap.data().useremail)
       }
 
     }
@@ -228,13 +272,13 @@ export default function StayDetail() {
   const [dateList, setDateList] = useState<Date[]>([]);
   useEffect(() => {
     generateDateList(range[0].startDate, range[0].endDate);
-    console.log(range)
+    
   }, [range])
+  
   async function reserveDates() {
     if (id) {
       dateList.forEach((date) => {
         const ref = doc(db, 'hotels', id); // Replace with your actual collection and document
-        console.log(date)
         updateDoc(ref, {
           reservedates: arrayUnion(date),
         });
@@ -257,9 +301,11 @@ export default function StayDetail() {
           return timestamp.toDate(); // Convert Firestore Timestamp to Date
         });
         setDisableDate(dateList);
+        
       }
     }
   }
+  
 
   return (
     <>
