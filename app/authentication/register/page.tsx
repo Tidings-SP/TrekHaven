@@ -79,6 +79,7 @@ export default function Register() {
                         useremail: data.email,
                         userphone: data.phone,
                         affordable: 2000,
+                        location: [""],
                     });
 
                 }

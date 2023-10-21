@@ -17,7 +17,7 @@ export async function POST(request: Request) {
         })
 
         const mailOption = {
-            from: 'suryaprakashspro@gmail.com',
+            from: 'trekwithhaven@gmail.com',
             to: res.email,
             subject: 'Successful booking of stay with Trek Haven',
       html: `<h1>Enjoy your trip with ${res.name}</h1>

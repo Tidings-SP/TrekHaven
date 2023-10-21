@@ -228,7 +228,7 @@ export default function StayDetail() {
   const [dateList, setDateList] = useState<Date[]>([]);
   useEffect(() => {
     generateDateList(range[0].startDate, range[0].endDate);
-
+    console.log(range)
   }, [range])
   async function reserveDates() {
     if (id) {
