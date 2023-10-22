@@ -36,14 +36,36 @@ import { auth, db } from "../firebase"
 import { signIn } from "next-auth/react"
 import TopNavBar from "@/components/navbar/top-navbar"
 import { doc, setDoc } from "firebase/firestore"
+import Link from "next/link"
+import { useEffect, useState } from "react"
 
+async function addr(pin: any) {
+    const data = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+    return await data.json()
+}
 
 type Input = z.infer<typeof registerSchema>;
 
 export default function Register() {
     const { toast } = useToast()
     const router = useRouter()
-    const [formStep, setFormStep] = React.useState(0)
+    const [pin, setPin] = useState<string>()
+    const [area, setArea] = useState<string[]>()
+    const [loc, setLoc] = useState<{state:string, district:string}>()
+    useEffect(() => {
+        addr(pin).then((res) => {
+            if (res[0].Status === "Success") {
+                console.log(res[0].PostOffice)
+                setArea((res[0].PostOffice).map((item: any) => item.Name))
+                setLoc({
+                    state:res[0].PostOffice[0].State,
+                    district:res[0].PostOffice[0].District
+                })
+            }
+        })
+
+    }, [pin])
+    const [formStep, setFormStep] = useState(0)
     const form = useForm<Input>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
@@ -52,6 +74,7 @@ export default function Register() {
             phone: "",
             password: "",
             confirmPassword: "",
+            pincode: "",
         },
     })
 
@@ -117,7 +140,7 @@ export default function Register() {
     return (
         <main>
             <div className='min-h-screen'>
-                <Card className="w-[350px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <Card className="w-[350px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ">
                     <CardHeader>
                         <CardTitle>Register</CardTitle>
                         <CardDescription>Find the best Accommodation here!</CardDescription>
@@ -126,9 +149,9 @@ export default function Register() {
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 relative p-1 overflow-x-hidden">
                                 <motion.div
-                                    animate={{ translateX: `-${formStep * 102}%` }}
+                                    animate={{ translateX: `-${formStep * 104}%` }}
                                     transition={{ ease: "easeInOut" }}
-                                    className={cn("space-y-3", {
+                                    className={cn("space-y-3 min-h-[350px]", {
                                         // hidden: formStep == 1,
                                     })}>
 
@@ -254,8 +277,120 @@ export default function Register() {
                                                 <FormControl>
                                                     <Input
                                                         type="date"
+                                                        tabIndex={-1}
                                                         {...field} />
                                                 </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </motion.div>
+
+                                <motion.div
+                                    animate={{ translateX: `${200 - formStep * 100}%` }}
+                                    style={{ translateX: `${200 - formStep * 100}%` }}
+                                    transition={{ ease: "easeInOut" }}
+                                    className={cn("space-y-3 absolute top-0 left-0 right-0", {
+                                        // hidden: formStep == 0,
+                                    })}>
+                                    <div className="flex space-x-2">
+                                        {/* Pin Code */}
+                                        <FormField
+                                            control={form.control}
+                                            name="pincode"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Pin Code</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            tabIndex={-1}
+                                                            type="number"
+                                                            onChange={(e) => field.onChange(() => {
+                                                                
+                                                                if (e.target.value) {
+                                                                    setPin(e.target.value)
+                                                                }
+                                                            })
+                                                            }
+                                                            onKeyDown={(event) => {
+                                                                const inputElement = event.target as HTMLInputElement;
+                                                                const key = event.key;
+
+                                                                // Allow backspace (keyCode 8) and only digits if the limit is not reached
+                                                                if (
+                                                                    (key === "Backspace" || /^\d$/.test(key)) &&
+                                                                    (inputElement.value.length < 6 || key === "Backspace")
+                                                                ) {
+                                                                    return; // Allow the keypress
+                                                                }
+
+                                                                event.preventDefault(); // Prevent other key presses
+                                                            }}
+                                                            placeholder="Pin Code..." />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        {/* Door No */}
+                                        <FormField
+                                            control={form.control}
+                                            name="doorno"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Door Number</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Door no..." tabIndex={-1} {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {/* Street */}
+                                        <FormField
+                                            control={form.control}
+                                            name="street"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Street</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="street addr..." tabIndex={-1} {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <h1 className="text-primary mt-8 ms-4 text-sm">Your district {loc?.district} and state {loc?.state}</h1>
+
+                                    </div>
+
+                                    {/* Area */}
+                                    <FormField
+                                        control={form.control}
+                                        name="area"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Area</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger tabIndex={-1}>
+                                                            <SelectValue placeholder="Select your area" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {area?.map((a) => (
+                                                            <SelectItem key={a} value={a}> {a} </SelectItem>
+
+                                                        ))}
+
+
+                                                    </SelectContent>
+                                                </Select>
+
                                                 <FormMessage />
                                             </FormItem>
                                         )}
@@ -267,17 +402,27 @@ export default function Register() {
 
                                     <Button type="button"
                                         variant={'ghost'}
-                                        className={cn({ hidden: formStep == 1, })}
+                                        className={cn({ hidden: formStep == 2, })}
                                         onClick={() => {
                                             form.trigger(['name', 'email', 'phone'])
                                             const emailState = form.getFieldState('email')
                                             const nameState = form.getFieldState('name')
                                             const phoneState = form.getFieldState('phone')
+                                            const passwordState = form.getFieldState('password')
+                                            const confirmPasswordState = form.getFieldState('confirmPassword')
+                                            const dobState = form.getFieldState('dob')
 
-                                            if (!emailState.isDirty || emailState.invalid) return;
-                                            if (!nameState.isDirty || nameState.invalid) return;
-                                            if (!phoneState.isDirty || emailState.invalid) return;
-                                            setFormStep(1);
+                                            if ((!emailState.isDirty || emailState.invalid) && formStep == 0) return;
+                                            if ((!nameState.isDirty || nameState.invalid) && formStep == 0) return;
+                                            if ((!phoneState.isDirty || phoneState.invalid) && formStep == 0) return;
+                                            if(formStep === 1) {
+
+                                                form.trigger(['password', 'confirmPassword', 'dob'])
+                                            }
+                                            if ((!passwordState.isDirty || passwordState.invalid) && formStep == 1) return;
+                                            if ((!confirmPasswordState.isDirty || confirmPasswordState.invalid) && formStep == 1) return;
+                                            if ((!dobState.isDirty || dobState.invalid) && formStep == 1) return;
+                                            setFormStep(formStep + 1);
                                         }}
                                     >Next Step
                                         <ArrowRight className="w-4 h-4 ml2" />
@@ -285,7 +430,7 @@ export default function Register() {
 
                                     <Button type="submit"
                                         className={cn({
-                                            hidden: formStep == 0,
+                                            hidden: formStep == 0 || formStep == 1,
                                         })}
                                     >Submit
                                     </Button>
@@ -293,7 +438,7 @@ export default function Register() {
                                     <Button type="button"
                                         variant={'ghost'}
                                         className={cn({ hidden: formStep == 0, })}
-                                        onClick={() => { setFormStep(0); }}
+                                        onClick={() => { setFormStep(formStep - 1); }}
                                     >Go Back</Button>
 
                                 </div>
