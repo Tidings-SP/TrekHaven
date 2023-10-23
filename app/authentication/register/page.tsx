@@ -1,7 +1,7 @@
 "use client"
 import * as React from "react"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { NEVER, never, z } from "zod"
 import { registerSchema } from "../../validators/auth-validator"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Toaster } from "@/components/ui/toaster"
@@ -49,18 +49,22 @@ type Input = z.infer<typeof registerSchema>;
 export default function Register() {
     const { toast } = useToast()
     const router = useRouter()
+    const [isValidPin, setIsValidPin] = useState(false)
     const [pin, setPin] = useState<string>()
     const [area, setArea] = useState<string[]>()
-    const [loc, setLoc] = useState<{state:string, district:string}>()
+    const [loc, setLoc] = useState<{ state: string, district: string }>()
     useEffect(() => {
         addr(pin).then((res) => {
             if (res[0].Status === "Success") {
                 console.log(res[0].PostOffice)
                 setArea((res[0].PostOffice).map((item: any) => item.Name))
                 setLoc({
-                    state:res[0].PostOffice[0].State,
-                    district:res[0].PostOffice[0].District
+                    state: res[0].PostOffice[0].State,
+                    district: res[0].PostOffice[0].District
                 })
+                setIsValidPin(true)
+            } else{
+                setIsValidPin(false)
             }
         })
 
@@ -89,6 +93,13 @@ export default function Register() {
 
             return;
         }
+        if(!isValidPin) {
+            toast({
+                title:"Enter a valid Pin Code",
+                variant:"destructive"
+            })
+            return;
+        }
         createUserWithEmailAndPassword(auth, data.email, data.password)
             .then(async () => {
                 if (auth.currentUser) {
@@ -103,6 +114,13 @@ export default function Register() {
                         userphone: data.phone,
                         affordable: 2000,
                         location: [""],
+                        area: data.area,
+                        city: loc?.district,
+                        state: loc?.state,
+                        doorno: data.doorno,
+                        street: data.street,
+                        dob: data.dob,
+                        pin: data.pincode,
                     });
 
                 }
@@ -136,6 +154,7 @@ export default function Register() {
             });
 
     }
+
 
     return (
         <main>
@@ -305,13 +324,13 @@ export default function Register() {
                                                         <Input
                                                             tabIndex={-1}
                                                             type="number"
-                                                            onChange={(e) => field.onChange(() => {
-                                                                
-                                                                if (e.target.value) {
-                                                                    setPin(e.target.value)
-                                                                }
-                                                            })
-                                                            }
+                                                            {...field} // Pass the form control field directly here
+                                                            onChange={(e) => {
+                                                                const inputValue = e.target.value;
+                                                                field.onChange(inputValue);
+                                                                form.setValue('area', NEVER);
+                                                                setPin(inputValue); // Update the 'pin' state
+                                                            }}
                                                             onKeyDown={(event) => {
                                                                 const inputElement = event.target as HTMLInputElement;
                                                                 const key = event.key;
@@ -415,7 +434,7 @@ export default function Register() {
                                             if ((!emailState.isDirty || emailState.invalid) && formStep == 0) return;
                                             if ((!nameState.isDirty || nameState.invalid) && formStep == 0) return;
                                             if ((!phoneState.isDirty || phoneState.invalid) && formStep == 0) return;
-                                            if(formStep === 1) {
+                                            if (formStep === 1) {
 
                                                 form.trigger(['password', 'confirmPassword', 'dob'])
                                             }

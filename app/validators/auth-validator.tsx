@@ -27,6 +27,10 @@ const isDateOfBirthValid = (dateString: string) => {
   return true;
 };
 
+const passwordsMatch = (data: { password: string; confirmPassword: string }) => {
+  return data.password === data.confirmPassword;
+};
+
 export const registerSchema = z.object({
   email: z.string().email(),
   name: z.string().min(3).max(20),
@@ -49,7 +53,7 @@ export const registerSchema = z.object({
     .refine(isDateOfBirthValid, {
       message: "Date of birth must be greater than or equal to 18 years ago",
     }),
-  pincode: z.any(),
+  pincode: z.string().min(6).max(6),
   area: z
     .string({
       required_error: "Please select your area.",
@@ -70,7 +74,11 @@ export const registerSchema = z.object({
     .max(30, {
       message: "Street Addr not be longer than 30 characters.",
     }),
-});
+})
+// .refine((data) => data.password === data.confirmPassword, {
+//   path: ["confirmPassword"],
+//   message: "Password do not match",
+// });
 
 
 
