@@ -32,7 +32,7 @@ async function addImpression(uid: any, local: string, price: number) {
 }
 
 const variants = {
-  open: { opacity: 1, y: 0, height: 350 },
+  open: { opacity: 1, y: 0, height: "auto" },
   closed: { opacity: 0, y: "-200%", height: 0 },
 }
 export default function Stays() {
@@ -42,6 +42,15 @@ export default function Stays() {
   const [topRate, setTopRate] = useState<number>(0);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [open, setOpen] = useState(0);
+
+  const [selectedState, setSelectedState] = useState(''); // State filter
+  const [selectedDistrict, setSelectedDistrict] = useState(''); // District filter
+  const [selectedArea, setSelectedArea] = useState(''); // Area filter
+
+  const [listState, setListState] = useState<string[]>();
+  const [listDistrict, setListDistrict] = useState<string[]>();
+  const [listArea, setListArea] = useState<string[]>();
+
   let uid = auth.currentUser?.uid;
   onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -60,7 +69,9 @@ export default function Stays() {
     rate: number;
     ref: string;
     items: string[];
-    location: string;
+    location: string; // state
+    city: string; // district
+    area: string;
   }[]>([]);
 
   useEffect(() => {
@@ -78,14 +89,54 @@ export default function Stays() {
           rate: doc.data().rate,
           price: doc.data().price,
           ref: doc.data().ref,
-          location: doc.data().state,
           items: doc.data().items,
+          location: doc.data().state,
+          city: doc.data().city,
+          area: doc.data().area,
         }))
       );
     });
 
     return () => unsubscribe(); // Cleanup when the component unmounts
   }, []);
+
+  // Extract unique states from stays
+  useEffect(() => {
+    const uniqueStates = new Set<string>();
+
+    stays.forEach((stay) => {
+      uniqueStates.add(stay.location);
+    });
+
+    setListState(Array.from(uniqueStates));
+  }, [stays]);
+
+  // Extract unique districts based on selected state
+  useEffect(() => {
+    const uniqueDistricts = new Set<string>();
+
+    stays.forEach((stay) => {
+      if (stay.location === selectedState) {
+        uniqueDistricts.add(stay.city);
+      }
+    });
+
+    setListDistrict(Array.from(uniqueDistricts));
+  }, [stays, selectedState]);
+
+  // Extract unique areas based on selected state
+  useEffect(() => {
+    const uniqueAreas = new Set<string>();
+
+    stays.forEach((stay) => {
+      if (stay.location === selectedState && stay.city === selectedDistrict) {
+        uniqueAreas.add(stay.area);
+      }
+    });
+
+    setListArea(Array.from(uniqueAreas));
+  }, [stays, selectedState, selectedDistrict]);
+
 
   function shuffleArray(array: any) {
     const shuffledArray = [...array];
@@ -119,8 +170,20 @@ export default function Stays() {
       // Check if the selected amenities are all included in the stay's amenities
       const amenitiesMatch = amenitiesFilter;
 
+      // Check if the state, district, and area filters are met
+      const stateMatch = selectedState === '' || stay.location.toLowerCase() === selectedState.toLowerCase();
+      const districtMatch = selectedDistrict === '' || stay.city.toLowerCase() === selectedDistrict.toLowerCase();
+      const areaMatch = selectedArea === '' || stay.area.toLowerCase() === selectedArea.toLowerCase();
+
+
       // Return true if all of the conditions are met
-      return searchTermMatch && priceMatch && rateMatch && amenitiesMatch;
+      return searchTermMatch &&
+        priceMatch &&
+        rateMatch &&
+        amenitiesMatch &&
+        stateMatch &&
+        districtMatch &&
+        areaMatch;
     })
   );
 
@@ -311,27 +374,132 @@ export default function Stays() {
               onChange={(e) => setPrice(Number(e.target.value))}
               placeholder="Around ₹ 1000..."
             />
-            <div>
-              <h4 className="text-primary mt-2">Top Rated</h4>
 
-              <Select
-                onValueChange={(e) => { setTopRate(Number(e)) }}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Top Rated" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Ratings</SelectLabel>
-                    <SelectItem value="0">Show All</SelectItem>
-                    <SelectItem value="3">3+ Star</SelectItem>
-                    <SelectItem value="4">4+ Star</SelectItem>
+            <div className="md:flex space-x-2">
+              {/* Top Rated */}
+              <div>
+                <h4 className="text-primary mt-2">Top Rated</h4>
 
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+                <Select
+                  onValueChange={(e) => { setTopRate(Number(e)) }}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Top Rated" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Ratings</SelectLabel>
+                      <SelectItem value="0">Show All</SelectItem>
+                      <SelectItem value="3">3+ Star</SelectItem>
+                      <SelectItem value="4">4+ Star</SelectItem>
+
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* State */}
+              <div>
+                <h4 className="text-primary mt-2">State</h4>
+
+                <Select
+                  onValueChange={(e) => {
+                    setSelectedState(e)
+                    if (e === "__empty__") {
+                      setSelectedState('')
+                      setSelectedDistrict('')
+                      setSelectedArea('')
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="State" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>State</SelectLabel>
+
+                      <SelectItem value='__empty__'>Show All</SelectItem>
+
+                      {
+                        listState?.map((i) => (
+
+                          <SelectItem key={i} value={i}>{i}</SelectItem>
+                        ))
+                      }
+
+
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* District */}
+              <div>
+                <h4 className="text-primary mt-2">District</h4>
+
+                <Select
+                  onValueChange={(e) => {
+                    setSelectedDistrict(e)
+                    if (e === "__empty__") {
+                      setSelectedDistrict('')
+                      setSelectedArea('')
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="District" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>District</SelectLabel>
+                      <SelectItem value='__empty__'>Show All</SelectItem>
+
+                      {
+                        listDistrict?.map((i) => (
+
+                          <SelectItem key={i} value={i}>{i}</SelectItem>
+                        ))
+                      }
+
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Area */}
+              <div>
+                <h4 className="text-primary mt-2">Area</h4>
+
+                <Select
+                  onValueChange={(e) => {
+                    setSelectedArea(e)
+                    if (e === "__empty__") {
+                      setSelectedArea('')
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Area" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Area</SelectLabel>
+                      <SelectItem value='__empty__'>Show All</SelectItem>
+
+                      {
+                        listArea?.map((i) => (
+
+                          <SelectItem key={i} value={i}>{i}</SelectItem>
+                        ))
+                      }
+
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
             </div>
-
 
 
 

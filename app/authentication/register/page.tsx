@@ -142,7 +142,6 @@ export default function Register() {
                                 title: "Something went wrong:(",
                                 variant: "destructive",
                             });
-                        console.log(error);
                     })
             })
             .catch((error) => {

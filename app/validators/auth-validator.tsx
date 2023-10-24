@@ -37,7 +37,7 @@ export const registerSchema = z.object({
   phone: z.string()
     .min(10).max(10)
     .refine(val => !isNaN(val as unknown as number)),
-  password: z.string().min(6).max(50)
+  password: z.string().min(8).max(50)
     .refine(password => {
       // Password should contain at least one uppercase letter
       // Password should contain at least one lowercase letter
@@ -48,7 +48,7 @@ export const registerSchema = z.object({
         /\d/.test(password) &&
         /[!@#$%^&*()_+[\]{};':"\\|,.<>/?]+/.test(password);
     }, { message: "The password should contain both upper case and lower case and atleast a digit, special charter " }),
-  confirmPassword: z.string().min(6).max(50),
+  confirmPassword: z.string().min(8).max(50),
   dob: z.string()
     .refine(isDateOfBirthValid, {
       message: "Date of birth must be greater than or equal to 18 years ago",
@@ -84,7 +84,7 @@ export const registerSchema = z.object({
 
 export const signinSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6).max(50),
+  password: z.string().min(8).max(50),
 });
 
 export const passSchema = z.object({

@@ -4,8 +4,8 @@ import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
-import { auth, db } from "@/app/authentication/firebase";
-import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
+import { auth, db, storage } from "@/app/authentication/firebase";
+import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where } from "firebase/firestore";
 import Ratings from "./ratings/page";
 import RatingsFragment from "./ratings/page";
 import { CalendarIcon, Star } from "lucide-react";
@@ -26,6 +26,10 @@ import 'react-date-range/dist/theme/default.css'
 import { toast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useFieldArray, useForm } from 'react-hook-form';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 
 type Stay = {
@@ -41,8 +45,17 @@ type Stay = {
   country: string;
 
 };
-async function add(uid: string | undefined, hid: string, hname: string, createrid: string, pid: string, price: number, status: string) {
-  await addDoc(collection(db, "history"), {
+async function add(uid: string | undefined,
+  hid: string,
+  hname: string,
+  createrid: string,
+  pid: string,
+  price: number,
+  status: string,
+  proofref: string[],
+  aadhaar: number[],
+) {
+  await setDoc(doc(db, "history", pid), {
     userid: uid,
     createrid: createrid,
     hname: hname,
@@ -51,15 +64,24 @@ async function add(uid: string | undefined, hid: string, hname: string, createri
     hotelid: hid,
     time: new Date().toLocaleString(),
     status: status,
+    proofref: proofref,
+    aadhaar: aadhaar
   });
 }
 export default function StayDetail() {
   const [amount, setAmount] = useState(0);
   const [stay, setStay] = useState<Stay | null>(null);
   const [disableDate, setDisableDate] = useState<Date[]>([]);
+
   const searchParams = useSearchParams();
   const id = searchParams?.get("id");
   const router = useRouter()
+
+  const [isValidIdProof, setIsValidIdProof] = useState(false)
+  const [aadhaarNo, setAadhaarNo] = useState<number[]>([])
+  const [img, setImg] = useState<File[]>([])
+  const [imgRef, setImgRef] = useState<string[]>([])
+
   const [uid, setUid] = useState<string>()
   const [uname, setUname] = useState<string>()
   const [uemail, setUemail] = useState<string>()
@@ -74,27 +96,27 @@ export default function StayDetail() {
 
     return () => unsubscribe();
   }, [])
-// Get user data
-useEffect(() => {
-  async function fetch() {
-    if (uid) {
-      const snap = await getDoc(doc(db, "user", uid));
-      if(snap.exists()){
-        setUphone(snap.data().userphone);
-        setUemail(snap.data().useremail);
-        setUname(snap.data().username);
+  // Get user data
+  useEffect(() => {
+    async function fetch() {
+      if (uid) {
+        const snap = await getDoc(doc(db, "user", uid));
+        if (snap.exists()) {
+          setUphone(snap.data().userphone);
+          setUemail(snap.data().useremail);
+          setUname(snap.data().username);
 
 
-        
+
+        }
+
       }
-
     }
-  }
 
-  fetch();
+    fetch();
 
 
-}, [uid])
+  }, [uid])
 
   useEffect(() => {
     async function fetchStay() {
@@ -134,7 +156,7 @@ useEffect(() => {
 
   // Define a ref for the Button element
   const popoverRef = useRef<HTMLButtonElement | null>(null);
-  
+
 
   const handlePayment = async () => {
     const res = await initializeRazorpay();
@@ -151,9 +173,27 @@ useEffect(() => {
         currency: "INR",
         amount: amount * stay.price * 100,
         description: "Enjoy your stay!",
-        handler:  function (response: any) {
+        handler: async function (response: any) {
           // Validate payment at server 
-          add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, amount * stay.price, "success")
+          // Array to store the download URLs of uploaded images
+          const imageUrls: string[] = [];
+
+          // Upload each image and collect their URLs
+          await Promise.all(
+            img.map(async (im) => {
+              // Get the original file extension
+              const fileExtension = im.name.split('.').pop();
+
+              // Generate a random image name
+              const randomImageName = generateUUID() + '.' + fileExtension;
+
+              const imgRef = ref(storage, `idproof/${randomImageName}`);
+              const snapshot = await uploadBytes(imgRef, im);
+              const url = await getDownloadURL(snapshot.ref);
+              imageUrls.push(url);
+            })
+          );
+          add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, amount * stay.price, "success", imageUrls, aadhaarNo)
           reserveDates();
           sendMail(response.razorpay_payment_id);
           alert(response.razorpay_payment_id);
@@ -162,7 +202,7 @@ useEffect(() => {
         prefill: {
           name: uname,
           email: uemail,
-          contact: "91"+uphone,
+          contact: "91" + uphone,
         },
 
 
@@ -171,7 +211,7 @@ useEffect(() => {
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.on('payment.failed', function (response: any) {
-        add(uid, stay.id, stay.name, stay.createrid, response.error.metadata.payment_id, amount * stay.price, "fail")
+        add(uid, stay.id, stay.name, stay.createrid, response.error.metadata.payment_id, amount * stay.price, "fail", [], [])
         alert(response.error.code);
         alert(response.error.reason);
         alert(response.error.metadata.payment_id);
@@ -201,7 +241,7 @@ useEffect(() => {
   };
 
   //Send Mail
-  async function sendMail(id:any) {
+  async function sendMail(id: any) {
     const res = await fetch('/api/admin', {
       method: 'POST',
       headers: {
@@ -211,10 +251,10 @@ useEffect(() => {
         email: cemail,
         name: uname,
         hname: stay?.name,
-        date: String(range[0].startDate+" to "+range[0].endDate),
-        price: (amount * (stay?(stay.price):0)),
-        total: ((disableDate.length * (stay?(stay.price):0)) + (amount * (stay?(stay.price):0))),
-        id:id,
+        date: String(range[0].startDate + " to " + range[0].endDate),
+        price: (amount * (stay ? (stay.price) : 0)),
+        total: ((disableDate.length * (stay ? (stay.price) : 0)) + (amount * (stay ? (stay.price) : 0))),
+        id: id,
       })
     });
   }
@@ -272,9 +312,9 @@ useEffect(() => {
   const [dateList, setDateList] = useState<Date[]>([]);
   useEffect(() => {
     generateDateList(range[0].startDate, range[0].endDate);
-    
+
   }, [range])
-  
+
   async function reserveDates() {
     if (id) {
       dateList.forEach((date) => {
@@ -301,11 +341,85 @@ useEffect(() => {
           return timestamp.toDate(); // Convert Firestore Timestamp to Date
         });
         setDisableDate(dateList);
-        
+
       }
     }
   }
-  
+
+  // Get Id Proof
+  interface IdProof {
+    no: number;
+  }
+  const { control, handleSubmit, register, getValues, setValue } = useForm<{ idProofs: IdProof[] }>({
+    defaultValues: {
+      idProofs: [{ no: 0 }],
+    },
+  });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'idProofs',
+  });
+
+  function validateAadhaar(aadhaar: string): boolean {
+    // The regular expression for a valid Aadhaar number.
+    const aadhaarPattern: RegExp = /^[2-9]{1}[0-9]{3}[0-9]{4}[0-9]{4}$/;
+
+    // Check if the input matches the regular expression.
+    if (aadhaarPattern.test(aadhaar)) {
+      // Calculate the checksum digit.
+      // const uidaiDigits: number[] = aadhaar.split("").map(Number);
+      // const lastDigit: number | undefined = uidaiDigits.pop();
+      // if (lastDigit !== undefined) {
+      //   const sum: number = uidaiDigits.reduce((acc: number, digit: number, index: number) => {
+      //     if (index % 2 === 0) {
+      //       digit *= 2;
+      //       if (digit > 9) {
+      //         digit -= 9;
+      //       }
+      //     }
+      //     return acc + digit;
+      //   }, 0);
+
+      //   // Check if the calculated checksum matches the last digit.
+      //   if ((sum + lastDigit) % 10 === 0) {
+      //     return true;
+      //   }
+      // }
+      return true;
+    }
+
+    return false;
+  }
+
+
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = (Math.random() * 16) | 0,
+        v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  function onIdSubmit(data: any) {
+    if (!validateAadhaar(String(data.idProofs[data.idProofs.length - 1].no))) {
+      toast({
+        title: 'Please check your Aadhaar Number and press the save!!',
+        variant: "destructive"
+      })
+      return;
+    } else if (!img[data.idProofs.length - 1]) {
+      toast({
+        title: 'Please upload your aadhaar and press the save!!',
+        variant: "destructive"
+      })
+      return;
+    }
+
+
+    setIsValidIdProof(true)
+    setAadhaarNo([])
+    data.idProofs.forEach((i: any) => setAadhaarNo((prev) => [...prev, i.no]))
+  }
 
   return (
     <>
@@ -380,7 +494,13 @@ useEffect(() => {
               <Button onClick={
                 async () => {
                   if (range[0].status) {
-                    
+                    if (!isValidIdProof) {
+                      toast({
+                        title: "Please add you Id proof & press save to continue...",
+                        variant: "destructive"
+                      })
+                      return;
+                    }
                     handlePayment()
                   } else {
                     toast({
@@ -394,7 +514,106 @@ useEffect(() => {
 
             </div>
           </div>
-          <Toaster />
+
+          <div className=' w-[53%]'>
+            <form onSubmit={handleSubmit(onIdSubmit)}>
+              <Label>Upload your Aadhaar</Label>
+              <div className="space-y-2">
+                {fields.map((item, index) => (
+                  <div key={item.id} className="space-y-2">
+                    <Label>Guest {index + 1}</Label>
+
+                    <Input
+                      disabled={index !== getValues(`idProofs`).length - 1}
+                      type="file"
+                      onChange={(e) => {
+
+                        if (e.target.files) {
+                          const selectedFile = e.target.files[0];
+                          const updatedIdProofs = [...img]; // Create a copy of the array
+                          updatedIdProofs[index] = selectedFile; // Update the image for the specified index
+                          setImg(updatedIdProofs); // Set the updated array back to the state
+                        }
+                      }}
+                    />
+
+                    <div className="flex gap-2">
+                      <Input
+                        disabled={index !== getValues(`idProofs`).length - 1}
+
+                        type="number"
+                        placeholder="Enter your Aadhaar number..."
+                        {...register(`idProofs.${index}.no`)}
+                        onKeyDown={(event) => {
+                          const inputElement = event.target as HTMLInputElement;
+                          const key = event.key;
+
+                          // Allow backspace (keyCode 8) and only digits if the limit is not reached
+                          if (
+                            (key === "Backspace" || /^\d$/.test(key)) &&
+                            (inputElement.value.length < 12 || key === "Backspace")
+                          ) {
+                            return; // Allow the keypress
+                          }
+
+                          event.preventDefault(); // Prevent other keypresses
+                        }}
+                      />
+                      <Button
+                        disabled={index === 0}
+                        onClick={() => {
+                          remove(index)
+                          setIsValidIdProof(false)
+
+                        }}
+                        type="button"
+                        variant="destructive"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className='space-x-2 flex mt-2'>
+                <Button
+                  disabled={(getValues(`idProofs`).length) > 5}
+                  type='button'
+
+                  onClick={() => {
+                    setIsValidIdProof(false)
+                    const aadhaarValue = getValues(`idProofs.${getValues(`idProofs`).length - 1}.no`);
+                    if (!validateAadhaar(String(aadhaarValue))) {
+                      toast({
+                        title: 'Please check your Aadhaar Number!!',
+                        variant: "destructive"
+                      })
+                      return;
+
+                    } else if (!img[getValues(`idProofs`).length - 1]) {
+                      toast({
+                        title: 'Please upload your Aadhaar!!',
+                        variant: "destructive"
+                      })
+                      return;
+                    }
+
+                    append({ no: 0 })
+                  }}
+                  variant={"outline"}
+                >
+                  Add
+                </Button>
+                <Button className="text-primary"
+                  variant="ghost">Save</Button>
+              </div>
+
+
+            </form>
+
+
+          </div>
+
           <h6 className='flex items-center text-xl font-semibold mt-2 ms-2'>Overall Rating:
             <Rating
               className="mb-1"
@@ -429,7 +648,10 @@ useEffect(() => {
           ) : null}
         </div>
       </div>
-
+      <Toaster />
     </>
   )
 }
+
+
+
