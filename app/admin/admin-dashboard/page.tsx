@@ -73,16 +73,16 @@ export default function AdminDashboard() {
     }
   }
   const [confirmation, setConfirmation] = useState('')
-  async function deleteStay(id: string,option:string) {
-    if("Delete"===confirmation && option==="delete") {
+  async function deleteStay(id: string, option: string) {
+    if ("Delete" === confirmation && option === "delete") {
       await deleteDoc(doc(db, "hotels", id))
       toast({
-        title:"Stay Removed Successfully."
+        title: "Stay Removed Successfully."
       })
-    } else if("Delete"!=confirmation && option==="delete"){
+    } else if ("Delete" != confirmation && option === "delete") {
       toast({
-        title:"Type 'Delete' to remove the stay!",
-        variant:"destructive"
+        title: "Type 'Delete' to remove the stay!",
+        variant: "destructive"
       })
     }
     setConfirmation('')
@@ -101,7 +101,10 @@ export default function AdminDashboard() {
               className="shadow-lg rounded-lg"
               key={card.id}
             >
-              <div className="flex items-center justify-center   ">
+              <div
+                onClick={() => handleOnClick(card.id, "view")}
+
+                className="flex items-center justify-center cursor-pointer">
                 <div className="flex w-[100%] h-[100%] overflow-hidden items-center justify-center">
 
                   <Image
@@ -112,7 +115,10 @@ export default function AdminDashboard() {
                     alt="Picture posted by the author"></Image>
                 </div>
               </div>
-              <div className="p-5">
+              <div
+                onClick={() => handleOnClick(card.id, "view")}
+
+                className="p-5 cursor-pointer">
                 <h3 className="text-xl font-bold mb-3 line-clamp-2">{card.name}</h3>
                 <p className="text-lg font-normal line-clamp-2">{card.desc}</p>
               </div>
@@ -141,24 +147,24 @@ export default function AdminDashboard() {
                           </Label>
                           <Input
                             id="Delete"
-                            onChange={(e)=>setConfirmation(e.target.value)}
+                            onChange={(e) => setConfirmation(e.target.value)}
                           />
                         </div>
                         <DialogClose asChild>
 
-                        <Button 
-                        onClick={()=>deleteStay(card.id, "delete")}
-                        type="button" variant={"destructive"} className="px-3">
-                          Delete
-                        </Button>
+                          <Button
+                            onClick={() => deleteStay(card.id, "delete")}
+                            type="button" variant={"destructive"} className="px-3">
+                            Delete
+                          </Button>
                         </DialogClose>
                       </div>
                       <DialogFooter className="sm:justify-start">
                         <DialogClose asChild>
                           <Button
-                        onClick={()=>deleteStay("", "close")}
-                          
-                          type="button" variant="secondary">
+                            onClick={() => deleteStay("", "close")}
+
+                            type="button" variant="secondary">
                             Close
                           </Button>
                         </DialogClose>
@@ -170,10 +176,9 @@ export default function AdminDashboard() {
 
                   <Button
                     className="w-full"
-                  //  onClick={() => handleOnClick(card.id, "view")}
-              onClick={()=>router.push(`/admin/admin-dashboard/user-data?id=${card.id}`)}
+                    onClick={() => router.push(`/admin/admin-dashboard/user-data?id=${card.id}`)}
 
-                    variant={"secondary"}>View</Button>
+                    variant={"secondary"}>Customer Data</Button>
                 </div>
               </div>
 
@@ -181,7 +186,7 @@ export default function AdminDashboard() {
           ))}
         </div>
       </div>
-      <Toaster/>
+      <Toaster />
 
     </>
   )
