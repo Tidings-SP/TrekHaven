@@ -35,8 +35,10 @@ export const registerSchema = z.object({
   email: z.string().email(),
   name: z.string().min(3).max(20),
   phone: z.string()
-    .min(10).max(10)
-    .refine(val => !isNaN(val as unknown as number)),
+  .min(10, { message: "Phone number must be at least 10 digits long." })
+  .max(10, { message: "Phone number must be at most 10 digits long." })
+  .refine(val => /^[6789]/.test(val), { message: "Phone number must start with 6, 7, 8, or 9." })
+  .refine(val => !isNaN(val as unknown as number), { message: "Phone number must contain only digits." }),
   password: z.string().min(8).max(50)
     .refine(password => {
       // Password should contain at least one uppercase letter

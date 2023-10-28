@@ -12,40 +12,40 @@ import { onAuthStateChanged } from "firebase/auth"
 
 // const data = [
 //   {
-    
+
 //     today: 240,
 //   },
 //   {
-    
+
 //     today: 139,
 //   },
 //   {
-    
+
 //     today: 980,
 //   },
 //   {
-    
+
 //     today: 390,
 //   },
 //   {
-    
+
 //     today: 480,
 //   },
 //   {
-    
+
 //     today: 380,
 //   },
 //   {
-    
+
 //     today: 430,
 //   },
-  
+
 // ]
 
 export default function ReportMetrics() {
   const { theme: mode } = useTheme()
   const [config] = useConfig()
-  const [data, setData] = useState<{total:number, time:string}[]>([]);
+  const [data, setData] = useState<{ total: number, time: string }[]>([]);
   let uid = auth.currentUser?.uid;
   onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -54,37 +54,38 @@ export default function ReportMetrics() {
     }
   });
 
-  const fetch = (uid:any) => {
-    
-    if(uid){
+  // Fetch Payment data
+  const fetch = (uid: any) => {
 
-      const q = query(collection(db, "history"), 
-      and(
-        where("createrid", "==", uid),
-        where("status", "==","success")
-      ));
-  
+    if (uid) {
+
+      const q = query(collection(db, "history"),
+        and(
+          where("createrid", "==", uid),
+          where("status", "==", "success")
+        ));
+
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         setData(
-          querySnapshot.docs.map((doc) => ({total: doc.data().price, time: doc.data().time }))
+          querySnapshot.docs.map((doc) => ({ total: doc.data().price, time: doc.data().time }))
         );
       });
 
-      
-  
+
+
       return () => unsubscribe(); // Cleanup when the component unmounts
     }
   }
   useEffect(() => {
     fetch(uid)
 
-  },[uid])
+  }, [uid])
 
   useEffect(() => {
     data.sort((a, b) => {
       const dateA = new Date(a.time).getTime();
       const dateB = new Date(b.time).getTime();
-    
+
       return dateA - dateB; // Sorting in ascending order
     });
 
@@ -95,10 +96,10 @@ export default function ReportMetrics() {
       item.total = cumulativeScore;
     });
 
-    
-  },[data])
 
-  const theme = themes.find((theme:any) => theme.name === config.theme)
+  }, [data])
+
+  const theme = themes.find((theme: any) => theme.name === config.theme)
   return (
     <Card>
       <CardHeader>
@@ -178,9 +179,8 @@ export default function ReportMetrics() {
                 style={
                   {
                     stroke: "var(--theme-primary)",
-                    "--theme-primary": `hsl(${
-                      theme?.cssVars[mode === "dark" ? "dark" : "light"].primary
-                    })`,
+                    "--theme-primary": `hsl(${theme?.cssVars[mode === "dark" ? "dark" : "light"].primary
+                      })`,
                   } as React.CSSProperties
                 }
               />

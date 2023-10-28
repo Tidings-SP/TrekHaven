@@ -7,8 +7,8 @@ import Link from "next/link"
 import React from "react"
 
 export const metadata: Metadata = {
-  title: "Forms",
-  description: "",
+  title: "Trek Haven",
+  description: "Find The Best Accommodations Here!",
 }
 
 const sidebarNavItems = [

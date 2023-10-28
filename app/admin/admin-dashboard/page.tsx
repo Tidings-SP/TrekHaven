@@ -170,7 +170,9 @@ export default function AdminDashboard() {
 
                   <Button
                     className="w-full"
-                    onClick={() => handleOnClick(card.id, "view")}
+                  //  onClick={() => handleOnClick(card.id, "view")}
+              onClick={()=>router.push(`/admin/admin-dashboard/user-data?id=${card.id}`)}
+
                     variant={"secondary"}>View</Button>
                 </div>
               </div>
