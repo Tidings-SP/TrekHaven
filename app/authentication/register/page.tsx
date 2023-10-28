@@ -64,6 +64,11 @@ export default function Register() {
                 })
                 setIsValidPin(true)
             } else{
+                setLoc({
+                    state: "",
+                    district: ""
+                  })
+                  setArea([])
                 setIsValidPin(false)
             }
         })
@@ -184,7 +189,7 @@ export default function Register() {
                                                 <FormControl>
                                                     <Input
                                                         onKeyDown={(event) => {
-                                                            if (!/[a-z]/i.test(event.key)) {
+                                                            if (!/[a-zA-Z\s]/.test(event.key)) {
                                                                 event.preventDefault(); // Prevent input of characters that do not match the regular expression.
                                                             }
                                                         }}
