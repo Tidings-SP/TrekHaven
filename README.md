@@ -4,7 +4,7 @@ TrekHaven is a full-stack website for accommodation booking and registration✈.
 
 Redirect to Trek Haven: [✨Live Demo of TrekHaven✨](https://trek-haven.vercel.app/)
 
-This project is buid by using NextJs and Firebase!
+This project is buid by using NextJs(TypeScript Execute) ,Firebase, Node Mailer, Pincode API, Tailwind CSS!
 
 ***
 
