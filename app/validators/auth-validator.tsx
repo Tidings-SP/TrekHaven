@@ -33,7 +33,16 @@ const passwordsMatch = (data: { password: string; confirmPassword: string }) => 
 
 export const registerSchema = z.object({
   email: z.string().email(),
-  name: z.string().min(3).max(20),
+  name: z.string().min(3).max(20).refine((name) => {
+    // Check if the same character is repeated consecutively
+    let isConsecutive = true;
+    for (let i = 1; i < name.length; i++) {
+      if (name[i] != name[i - 1]) {
+        return true;
+      }
+    }
+    return false;
+  }, { message: "Name should not contain consecutive repeating characters." }),
   phone: z.string()
   .min(10, { message: "Phone number must be at least 10 digits long." })
   .max(10, { message: "Phone number must be at most 10 digits long." })
@@ -77,10 +86,9 @@ export const registerSchema = z.object({
       message: "Street Addr not be longer than 30 characters.",
     }),
 })
-// .refine((data) => data.password === data.confirmPassword, {
-//   path: ["confirmPassword"],
-//   message: "Password do not match",
-// });
+.refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match", // Set custom message for password mismatch
+});
 
 
 

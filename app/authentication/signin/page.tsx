@@ -49,7 +49,7 @@ export default function Login() {
       .catch((error) => { 
         toast(
           {
-              title: "Something went wrong:(",
+              title: "Check Your Email or Password :(",
               variant: "destructive",
           });
           console.log(error); })

@@ -53,28 +53,8 @@ export default function Register() {
     const [pin, setPin] = useState<string>()
     const [area, setArea] = useState<string[]>()
     const [loc, setLoc] = useState<{ state: string, district: string }>()
-    useEffect(() => {
-        addr(pin).then((res) => {
-            if (res[0].Status === "Success") {
-                console.log(res[0].PostOffice)
-                setArea((res[0].PostOffice).map((item: any) => item.Name))
-                setLoc({
-                    state: res[0].PostOffice[0].State,
-                    district: res[0].PostOffice[0].District
-                })
-                setIsValidPin(true)
-            } else{
-                setLoc({
-                    state: "",
-                    district: ""
-                  })
-                  setArea([])
-                setIsValidPin(false)
-            }
-        })
 
-    }, [pin])
-    const [formStep, setFormStep] = useState(0)
+
     const form = useForm<Input>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
@@ -86,6 +66,68 @@ export default function Register() {
             pincode: "",
         },
     })
+    useEffect(() => {
+        const pincodeState = form.getFieldState('pincode')
+        addr(pin).then((res) => {
+            if (res[0].Status === "Success") {
+                console.log(res[0].PostOffice)
+                setArea((res[0].PostOffice).map((item: any) => item.Name))
+                setLoc({
+                    state: res[0].PostOffice[0].State,
+                    district: res[0].PostOffice[0].District
+                })
+                setIsValidPin(true)
+                form.clearErrors("pincode");
+            } else {
+                setLoc({
+                    state: "",
+                    district: ""
+                })
+                setArea([])
+                setIsValidPin(false)
+                if (pincodeState.isDirty) {
+                    form.setError("pincode", {
+                        type: "manual",
+                        message: "Invalid Pincode",
+                    });
+                }
+
+            }
+        })
+
+    }, [form, pin])
+    const password = form.watch("password", "");
+    const confirmPassword = form.watch("confirmPassword", "");
+
+    useEffect(() => {
+        if (password !== confirmPassword && form.getFieldState("confirmPassword").isDirty) {
+            // Set error if passwords don't match
+            form.setError("confirmPassword", {
+                type: "manual",
+                message: "Passwords do not match",
+            });
+        } else {
+            // Clear error if passwords match
+            form.clearErrors("confirmPassword");
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [password, confirmPassword]);
+    const [yourAge, setYourAge] = useState<number | null>(null); // Initialize age state
+ const watchDob = form.watch("dob"); // Get the value of "dob"
+    useEffect(() => {
+       
+        if (watchDob) {
+            const dob = new Date(watchDob);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            setYourAge(age); // Update age state
+        }
+    }, [watchDob]);
+
 
     function onSubmit(data: Input) {
         if (data.confirmPassword !== data.password) {
@@ -98,10 +140,10 @@ export default function Register() {
 
             return;
         }
-        if(!isValidPin) {
+        if (!isValidPin) {
             toast({
-                title:"Enter a valid Pin Code",
-                variant:"destructive"
+                title: "Enter a valid Pin Code",
+                variant: "destructive"
             })
             return;
         }
@@ -161,22 +203,20 @@ export default function Register() {
 
 
     return (
-        <main>
-            <div className='min-h-screen'>
-                <Card className="w-[350px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ">
+        <main className="bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center min-h-screen">
+
+            <div className='' >
+                <Card className="w-[450px] m-10">
                     <CardHeader>
                         <CardTitle>Register</CardTitle>
-                        <CardDescription>Find the best Accommodation here!</CardDescription>
+                        <CardDescription>Find the best Accommodation here!
+
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 relative p-1 overflow-x-hidden">
-                                <motion.div
-                                    animate={{ translateX: `-${formStep * 104}%` }}
-                                    transition={{ ease: "easeInOut" }}
-                                    className={cn("space-y-3 min-h-[350px]", {
-                                        // hidden: formStep == 1,
-                                    })}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-2 gap-4">
+                                <div className="space-y-2">
 
 
                                     {/* Name */}
@@ -243,22 +283,11 @@ export default function Register() {
                                             </FormItem>
                                         )}
                                     />
-                                    <div className="justify-item-stretch">
 
-                                        <Button className="float-right" variant={"link"} type="button"
-                                            onClick={() => router.push("/authentication/signin")}
-                                        >Already Register! Login.</Button>
-                                    </div>
 
-                                </motion.div>
+                                </div>
 
-                                <motion.div
-                                    animate={{ translateX: `${100 - formStep * 100}%` }}
-                                    style={{ translateX: `${100 - formStep * 100}%` }}
-                                    transition={{ ease: "easeInOut" }}
-                                    className={cn("space-y-3 absolute top-0 left-0 right-0", {
-                                        // hidden: formStep == 0,
-                                    })}>
+                                <div className="space-y-2">
 
                                     {/* Password */}
                                     <FormField
@@ -289,33 +318,36 @@ export default function Register() {
                                             </FormItem>
                                         )}
                                     />
-
                                     {/* DOB */}
-                                    <FormField
-                                        control={form.control}
-                                        name="dob"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>DOB</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="date"
-                                                        tabIndex={-1}
-                                                        {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </motion.div>
+                                    <div className="flex space-y-8 gap-2">
+                                        <FormField
+                                        
+                                            control={form.control}
+                                            name="dob"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>DOB</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            type="date"
+                                                            tabIndex={-1}
+                                                            {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        
+                                            <h1 className="text-primary mt-8 ms-4 text-sm">
+                                            Your age {yourAge !== null ? "is: "+yourAge : "must be greater than or equal to 18 years ago"}</h1>
 
-                                <motion.div
-                                    animate={{ translateX: `${200 - formStep * 100}%` }}
-                                    style={{ translateX: `${200 - formStep * 100}%` }}
-                                    transition={{ ease: "easeInOut" }}
-                                    className={cn("space-y-3 absolute top-0 left-0 right-0", {
-                                        // hidden: formStep == 0,
-                                    })}>
+                                        
+                                    </div>
+
+
+                                </div>
+
+                                <div className="space-y-2">
                                     <div className="flex space-x-2">
                                         {/* Pin Code */}
                                         <FormField
@@ -372,7 +404,7 @@ export default function Register() {
                                         />
 
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex space-y-6 gap-2">
                                         {/* Street */}
                                         <FormField
                                             control={form.control}
@@ -418,58 +450,24 @@ export default function Register() {
                                             </FormItem>
                                         )}
                                     />
-                                </motion.div>
-
-                                <div className="flex gap-2">
-
-
-                                    <Button type="button"
-                                        variant={'ghost'}
-                                        className={cn({ hidden: formStep == 2, })}
-                                        onClick={() => {
-                                            form.trigger(['name', 'email', 'phone'])
-                                            const emailState = form.getFieldState('email')
-                                            const nameState = form.getFieldState('name')
-                                            const phoneState = form.getFieldState('phone')
-                                            const passwordState = form.getFieldState('password')
-                                            const confirmPasswordState = form.getFieldState('confirmPassword')
-                                            const dobState = form.getFieldState('dob')
-
-                                            if ((!emailState.isDirty || emailState.invalid) && formStep == 0) return;
-                                            if ((!nameState.isDirty || nameState.invalid) && formStep == 0) return;
-                                            if ((!phoneState.isDirty || phoneState.invalid) && formStep == 0) return;
-                                            if (formStep === 1) {
-
-                                                form.trigger(['password', 'confirmPassword', 'dob'])
-                                            }
-                                            if ((!passwordState.isDirty || passwordState.invalid) && formStep == 1) return;
-                                            if ((!confirmPasswordState.isDirty || confirmPasswordState.invalid) && formStep == 1) return;
-                                            if ((!dobState.isDirty || dobState.invalid) && formStep == 1) return;
-                                            setFormStep(formStep + 1);
-                                        }}
-                                    >Next Step
-                                        <ArrowRight className="w-4 h-4 ml2" />
-                                    </Button>
-
-                                    <Button type="submit"
-                                        className={cn({
-                                            hidden: formStep == 0 || formStep == 1,
-                                        })}
-                                    >Submit
-                                    </Button>
-
-                                    <Button type="button"
-                                        variant={'ghost'}
-                                        className={cn({ hidden: formStep == 0, })}
-                                        onClick={() => { setFormStep(formStep - 1); }}
-                                    >Go Back</Button>
-
+                                    <Button variant={"link"} type="button"
+                                        onClick={() => router.push("/authentication/signin")}
+                                    >← Login</Button>
+                                    <Button type="submit" className="mt-4 float-right px-10">Submit</Button>
                                 </div>
+
+
                             </form>
                         </Form>
                     </CardContent>
                 </Card>
                 <Toaster />
+            </div>
+
+            <div className="absolute top-0 right-0 m-4">
+                <Button className="float-right" variant={"link"} type="button"
+                    onClick={() => router.push("/authentication/signin")}
+                >← Login</Button>
             </div>
 
         </main>
