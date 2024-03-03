@@ -27,6 +27,32 @@ const isDateOfBirthValid = (dateString: string) => {
   return true;
 };
 
+const isDateOfBirthPositive = (dateString: string) => {
+  const dateOfBirth = new Date(dateString);
+  const currentDate = new Date();
+  const ageDiff = currentDate.getFullYear() - dateOfBirth.getFullYear();
+
+  if (ageDiff < 0) {
+    return false;
+  }
+
+  if (
+    ageDiff === 0 &&
+    currentDate.getMonth() < dateOfBirth.getMonth()
+  ) {
+    return false;
+  }
+
+  if (
+    ageDiff === 0 &&
+    currentDate.getMonth() === dateOfBirth.getMonth() &&
+    currentDate.getDate() < dateOfBirth.getDate()
+  ) {
+    return false;
+  }
+
+  return true;
+};
 const passwordsMatch = (data: { password: string; confirmPassword: string }) => {
   return data.password === data.confirmPassword;
 };
@@ -42,7 +68,11 @@ export const registerSchema = z.object({
       }
     }
     return false;
-  }, { message: "Name should not contain consecutive repeating characters." }),
+  }, { message: "Name should not contain consecutive repeating characters." })
+  .refine((name) => {
+    // Check if the string starts with a space
+    return !name.startsWith(" ");
+  }, { message: "Name must not start with a space." }),
   phone: z.string()
   .min(10, { message: "Phone number must be at least 10 digits long." })
   .max(10, { message: "Phone number must be at most 10 digits long." })
@@ -63,6 +93,10 @@ export const registerSchema = z.object({
   dob: z.string()
     .refine(isDateOfBirthValid, {
       message: "Date of birth must be greater than or equal to 18 years ago",
+    }),
+    dobId: z.string()
+    .refine(isDateOfBirthPositive, {
+      message: "Date of birth must be positive",
     }),
   pincode: z.string().min(6).max(6),
   area: z

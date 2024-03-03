@@ -229,10 +229,25 @@ export default function Register() {
                                                 <FormControl>
                                                     <Input
                                                         onKeyDown={(event) => {
-                                                            if (!/[a-zA-Z\s]/.test(event.key)) {
-                                                                event.preventDefault(); // Prevent input of characters that do not match the regular expression.
+                                                            const inputElement = event.target as HTMLInputElement;
+                                                            const key = event.key;
+                                    
+                                                            if (inputElement.selectionStart) {
+                                                              const prevChar = inputElement.value[inputElement.selectionStart - 1];
+                                                              const nextChar = inputElement.value[inputElement.selectionStart];
+                                                              if (key === " " && (prevChar === " " || nextChar === " ")) {
+                                                                event.preventDefault();
+                                                              }
                                                             }
-                                                        }}
+                                                            // Allow arrow keys and backspace
+                                                            if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown" || key === "Backspace") {
+                                                              return;
+                                                            }
+                                                            // Only allow alphabetical characters and single spaces
+                                                            if (!/^[a-zA-Z\s]$/.test(key)) {
+                                                              event.preventDefault();
+                                                            }
+                                                          }}
                                                         placeholder="Enter your name..." {...field} />
                                                 </FormControl>
                                                 <FormMessage />

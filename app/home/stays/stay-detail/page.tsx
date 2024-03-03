@@ -30,6 +30,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { z } from 'zod';
+import { registerSchema } from '@/app/validators/auth-validator';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { personalDetailSchema } from '@/app/validators/personal-detail-validator';
 
 
 type Stay = {
@@ -54,6 +59,9 @@ async function add(uid: string | undefined,
   status: string,
   proofref: string[],
   aadhaar: number[],
+  name: string[],
+  phone: number[],
+  dob: string[]
 ) {
   await setDoc(doc(db, "history", pid), {
     userid: uid,
@@ -65,9 +73,16 @@ async function add(uid: string | undefined,
     time: new Date().toLocaleString(),
     status: status,
     proofref: proofref,
-    aadhaar: aadhaar
+    aadhaar: aadhaar,
+    name: name,
+    dob: dob,
+    phone: phone
   });
 }
+
+type Input = z.infer<typeof personalDetailSchema>;
+
+
 export default function StayDetail() {
   const [amount, setAmount] = useState(0);
   const [stay, setStay] = useState<Stay | null>(null);
@@ -78,9 +93,13 @@ export default function StayDetail() {
   const router = useRouter()
 
   const [isValidIdProof, setIsValidIdProof] = useState(false)
+  const [isValidPersonalDetail, setIsValidPersonalDetail] = useState(false)
   const [aadhaarNo, setAadhaarNo] = useState<number[]>([])
+  const [IdPhone, setIdPhone] = useState<number[]>([])
   const [img, setImg] = useState<File[]>([])
   const [imgRef, setImgRef] = useState<string[]>([])
+  const [IdName, setIdName] = useState<string[]>([])
+  const [IdDob, setIdDob] = useState<string[]>([])
 
   const [uid, setUid] = useState<string>()
   const [uname, setUname] = useState<string>()
@@ -193,7 +212,7 @@ export default function StayDetail() {
               imageUrls.push(url);
             })
           );
-          add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, amount * stay.price, "success", imageUrls, aadhaarNo)
+          add(uid, stay.id, stay.name, stay.createrid, response.razorpay_payment_id, amount * stay.price, "success", imageUrls, aadhaarNo, IdName, IdPhone, IdDob)
           reserveDates();
           sendMail(response.razorpay_payment_id);
           alert(response.razorpay_payment_id);
@@ -211,7 +230,7 @@ export default function StayDetail() {
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.on('payment.failed', function (response: any) {
-        add(uid, stay.id, stay.name, stay.createrid, response.error.metadata.payment_id, amount * stay.price, "fail", [], [])
+        add(uid, stay.id, stay.name, stay.createrid, response.error.metadata.payment_id, amount * stay.price, "fail", [], [], [], [], [])
         alert(response.error.code);
         alert(response.error.reason);
         alert(response.error.metadata.payment_id);
@@ -347,17 +366,98 @@ export default function StayDetail() {
   }
 
   // Get Id Proof
+  // const form = useForm<Input>({
+  //   resolver: zodResolver(personalDetailSchema),
+  //   defaultValues: {
+  //     name: "",
+  //     phone: "",
+  //     dobId: "",
+
+  //   },
+  // })
+  const validateName = (value: string) => {
+    if (!value) {
+      return 'Name is required';
+    }
+    if (value.length < 3 || value.length > 20) {
+      return 'Name must be between 3 and 20 characters';
+    }
+    if (!/^[a-zA-Z\s]*$/.test(value)) {
+      return 'Name must contain only alphabets and spaces';
+    }
+    if (/(.)\1{2}/.test(value)) {
+      return 'Name should not contain consecutive repeating characters';
+    }
+    return true;
+  };
+  const validateAge = (value: string) => {
+    if (!value) {
+      return 'Age is required';
+    }
+    const dob = new Date(value);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    setYourAge(age);
+
+    if (isNaN(age) || age < 0) {
+      return 'Age must be a positive number';
+    }
+    return true;
+  };
+
+  const validateMobileNumber = (value: number) => {
+    if (!value) {
+      return 'Phone number is required';
+    }
+    const phoneNumber = value.toString();
+    if (phoneNumber.length !== 10) {
+      return 'Phone number must be 10 digits long';
+    }
+    if (!/^[6-9]/.test(phoneNumber)) {
+      return 'Phone number must start with 6, 7, 8, or 9';
+    }
+    return true;
+  };
+
+
+  const [isId, setIsId] = useState(false); // true:ID, false:PersonalDetails
+
   interface IdProof {
     no: number;
   }
-  const { control, handleSubmit, register, getValues, setValue } = useForm<{ idProofs: IdProof[] }>({
+
+  interface PersonalDetail {
+    name: string;
+    age: string;
+    mobileNumber: number;
+  }
+
+  const { control, handleSubmit, register, getValues, setValue } = useForm<{
+    idProofs: IdProof[];
+  }>({
     defaultValues: {
-      idProofs: [{ no: 0 }],
+      idProofs: [{ no: 0 }]
     },
   });
-  const { fields, append, remove } = useFieldArray({
+  const { control: personalDetailsControl, handleSubmit: personalDetailsSubmit, register: personalDetailsRegister, getValues: getPersonalDetailsValues, setValue: setPersonalDetailsValue, formState: { errors }, trigger } = useForm<{
+    personalDetails: PersonalDetail[];
+  }>({
+    defaultValues: {
+      personalDetails: [{ name: '', age: '', mobileNumber: 0 }],
+    },
+  });
+  const { fields: idProofFields, append: appendIdProof, remove: removeIdProof } = useFieldArray({
     control,
     name: 'idProofs',
+  });
+
+  const { fields: personalDetailFields, append: appendPersonalDetail, remove: removePersonalDetail } = useFieldArray({
+    control: personalDetailsControl,
+    name: 'personalDetails',
   });
 
   function validateAadhaar(aadhaar: string): boolean {
@@ -401,6 +501,7 @@ export default function StayDetail() {
   }
 
   function onIdSubmit(data: any) {
+    console.log(data)
     if (!validateAadhaar(String(data.idProofs[data.idProofs.length - 1].no))) {
       toast({
         title: 'Please check your Aadhaar Number and press the save!!',
@@ -421,6 +522,35 @@ export default function StayDetail() {
     data.idProofs.forEach((i: any) => setAadhaarNo((prev) => [...prev, i.no]))
   }
 
+  function onPersonalDetailSubmit(data: any) {
+    console.log(data)
+    setIdName([])
+    setIdDob([])
+    setIdPhone([])
+    data.personalDetails.forEach((i: any) => setIdName((prev) => [...prev, i.name]))
+    data.personalDetails.forEach((i: any) => setIdDob((prev) => [...prev, i.age]))
+    data.personalDetails.forEach((i: any) => setIdPhone((prev) => [...prev, i.mobileNumber]))
+    setIsValidPersonalDetail(true);
+  }
+
+  const [yourAge, setYourAge] = useState<number | null>(null); // Initialize age state
+
+  useEffect(() => {
+    console.log(isValidPersonalDetail)
+  }, [isValidPersonalDetail])
+  function calculateAge(dob: any) {
+    const dobDate = new Date(dob);
+    const today = new Date();
+    
+    let age = today.getFullYear() - dobDate.getFullYear();
+    const monthDiff = today.getMonth() - dobDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  }
   return (
     <>
       <div className='flex flex-col justify-between lg:flex-row gap-16 lg:items-center p-5'>
@@ -494,14 +624,16 @@ export default function StayDetail() {
               <Button onClick={
                 async () => {
                   if (range[0].status) {
-                    if (!isValidIdProof) {
-                      toast({
-                        title: "Please add you Id proof & press save to continue...",
-                        variant: "destructive"
-                      })
+                    if (isValidIdProof || isValidPersonalDetail) {
+                      handlePayment()
                       return;
                     }
-                    handlePayment()
+                    toast({
+                      title: "Please add you Id proof or personal detail & press save to continue...",
+                      variant: "destructive"
+                    })
+
+
                   } else {
                     toast({
                       title: "Please pick a date!",
@@ -514,12 +646,21 @@ export default function StayDetail() {
 
             </div>
           </div>
-
-          <div className=' w-[53%]'>
+          {/* Id Proof */}
+          <div className={`w-[53%] ${cn({ hidden: !isId })}`}>
+            <Button variant={'outline'} onClick={() => {
+              setIsId(false)
+              setIsValidPersonalDetail(false)
+              setIsValidIdProof(false)
+              setAadhaarNo([])
+              setIdName([])
+              setIdDob([])
+              setIdPhone([])
+              }}>Upload Aadhaar instead of Personal Details</Button>
             <form onSubmit={handleSubmit(onIdSubmit)}>
               <Label>Upload your Aadhaar</Label>
               <div className="space-y-2">
-                {fields.map((item, index) => (
+                {idProofFields.map((item, index) => (
                   <div key={item.id} className="space-y-2">
                     <Label>Guest {index + 1}</Label>
 
@@ -562,7 +703,7 @@ export default function StayDetail() {
                       <Button
                         disabled={index === 0}
                         onClick={() => {
-                          remove(index)
+                          removeIdProof(index)
                           setIsValidIdProof(false)
 
                         }}
@@ -598,7 +739,7 @@ export default function StayDetail() {
                       return;
                     }
 
-                    append({ no: 0 })
+                    appendIdProof({ no: 0 })
                   }}
                   variant={"outline"}
                 >
@@ -613,6 +754,148 @@ export default function StayDetail() {
 
 
           </div>
+
+          {/* Personal Details */}
+          <div className={`w-[53%] ${cn({ hidden: isId })}`}>
+            <Button variant={'outline'} onClick={() => {
+              setIsId(true)
+              setIsValidPersonalDetail(false)
+              setIsValidIdProof(false)
+              setAadhaarNo([])
+              setIdName([])
+              setIdDob([])
+              setIdPhone([])
+
+            }}>Upload Aadhaar instead of Personal Details</Button>
+
+            <Label>Upload your Personal Details</Label>
+            <form onSubmit={personalDetailsSubmit(onPersonalDetailSubmit)}>
+
+              <div className="space-y-2">
+                {personalDetailFields.map((item, index) => (
+                  <div key={item.id} className="space-y-2">
+                    <Label>Guest {index + 1}</Label>
+
+
+                    {/* Name */}
+
+
+                    <h1>Name</h1>
+                    <Input
+                      disabled={index !== getPersonalDetailsValues(`personalDetails`).length - 1}
+                      {...personalDetailsRegister(`personalDetails.${index}.name`, { validate: validateName })}
+                      onKeyDown={(event) => {
+                        const inputElement = event.target as HTMLInputElement;
+                        const key = event.key;
+
+                        if (inputElement.selectionStart) {
+                          const prevChar = inputElement.value[inputElement.selectionStart - 1];
+                          const nextChar = inputElement.value[inputElement.selectionStart];
+                          if (key === " " && (prevChar === " " || nextChar === " ")) {
+                            event.preventDefault();
+                          }
+                        }
+                        // Allow arrow keys and backspace
+                        if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown" || key === "Backspace") {
+                          return;
+                        }
+                        // Only allow alphabetical characters and single spaces
+                        if (!/^[a-zA-Z\s]$/.test(key)) {
+                          event.preventDefault();
+                        }
+                      }}
+                      placeholder="Name..." />
+                    {errors.personalDetails && errors.personalDetails[index] && errors.personalDetails[index]?.name && (
+                      <span className='text-destructive font-medium'>{errors.personalDetails[index]?.name?.message}</span>
+                    )}
+
+
+                    {/* DOB */}
+                    <div className="flex flex-col space-y-2 gap-2">
+                      <h1>Date of Birth</h1>
+                      <Input
+                        {...personalDetailsRegister(`personalDetails.${index}.age`, { validate: validateAge })}
+                        disabled={index !== getPersonalDetailsValues(`personalDetails`).length - 1}
+
+                        type="date"
+                        tabIndex={-1}
+                      />
+                      {errors.personalDetails && errors.personalDetails[index] && errors.personalDetails[index]?.age && (
+                        <span className='text-destructive font-medium'>{errors.personalDetails[index]?.age?.message}</span>
+                      )}
+
+                      <h1 className="text-primary mt-8 ms-4 text-sm">
+                        Your age {!isNaN(parseFloat(getPersonalDetailsValues(`personalDetails.${index}.age`))) ? "is: " + calculateAge(getPersonalDetailsValues(`personalDetails.${index}.age`)) : "must be greater than or equal to 0 years ago"}</h1>
+
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {/* Phone Number */}
+                      <h1>Phone Number</h1>
+                      <Input
+                        disabled={index !== getPersonalDetailsValues(`personalDetails`).length - 1}
+                        {...personalDetailsRegister(`personalDetails.${index}.mobileNumber`, { validate: validateMobileNumber })}
+                        type="number"
+                        onKeyDown={(event) => {
+                          const inputElement = event.target as HTMLInputElement;
+                          const key = event.key;
+
+                          // Allow backspace (keyCode 8) and only digits if the limit is not reached
+                          if (
+                            (key === "Backspace" || /^\d$/.test(key)) &&
+                            (inputElement.value.length < 10 || key === "Backspace")
+                          ) {
+                            return; // Allow the keypress
+                          }
+
+                          event.preventDefault(); // Prevent other keypresses
+                        }}
+                        placeholder="Enter your phone number..." />
+                      {errors.personalDetails && errors.personalDetails[index] && errors.personalDetails[index]?.mobileNumber && (
+                        <span className='text-destructive font-medium'>{errors.personalDetails[index]?.mobileNumber?.message}</span>
+                      )}
+
+                      <Button
+                        disabled={index === 0}
+                        onClick={() => {
+                          removePersonalDetail(index)
+                        }}
+                        type="button"
+                        variant="destructive"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+
+
+                  </div>
+                ))}
+                <div className='space-x-2 flex mt-2'>
+                  <Button
+                    disabled={(getPersonalDetailsValues(`personalDetails`).length) > 5}
+                    type='button'
+
+                    onClick={() => {
+                      setIsValidPersonalDetail(false)
+                      trigger().then((isValid) => {
+                        if (isValid) appendPersonalDetail({ name: '', age: '', mobileNumber: 0 });
+
+                      })
+
+                    }}
+                    variant={"outline"}
+                  >
+                    Add
+                  </Button>
+                  <Button className="text-primary"
+                    type='submit'
+                    variant="ghost">Save</Button>
+                </div>
+              </div>
+            </form>
+
+          </div>
+
+
 
           <h6 className='flex items-center text-xl font-semibold mt-2 ms-2'>Overall Rating:
             <Rating
