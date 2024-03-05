@@ -56,9 +56,9 @@ export default function Login() {
   }
 
   return (
-    <main>
-      <div className='min-h-screen'>
-        <Card className="w-[350px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+    <main className="bg-[url('/img/Login.jpg')] object-cover">
+      <div className='flex min-h-screen items-center backdrop-brightness-50 ps-3 sm:ps-10'>
+        <Card className="w-[350px] absolute">
           <CardHeader>
             <CardTitle>Login</CardTitle>
             <CardDescription>Find the best Accommodation here!</CardDescription>

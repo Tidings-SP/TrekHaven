@@ -423,7 +423,7 @@ export default function StayDetail() {
     return true;
   };
 
-
+const[ isValidAgeList, setIsValidAgeList] = useState(false);
   const [isId, setIsId] = useState(false); // true:ID, false:PersonalDetails
 
   interface IdProof {
@@ -530,14 +530,17 @@ export default function StayDetail() {
     data.personalDetails.forEach((i: any) => setIdName((prev) => [...prev, i.name]))
     data.personalDetails.forEach((i: any) => setIdDob((prev) => [...prev, i.age]))
     data.personalDetails.forEach((i: any) => setIdPhone((prev) => [...prev, i.mobileNumber]))
+    
     setIsValidPersonalDetail(true);
   }
 
   const [yourAge, setYourAge] = useState<number | null>(null); // Initialize age state
 
   useEffect(() => {
-    console.log(isValidPersonalDetail)
-  }, [isValidPersonalDetail])
+    setIsValidAgeList(IdDob.some(age => calculateAge(age) >= 18));
+
+  }, [IdDob])
+
   function calculateAge(dob: any) {
     const dobDate = new Date(dob);
     const today = new Date();
@@ -578,7 +581,9 @@ export default function StayDetail() {
 
             <div className='flex flex-row items-center'>
               <div className={cn("grid gap-2")}>
-
+                <div>
+                  <Input type='time' step="1800"></Input>
+                </div>
                 <Popover >
                   <PopoverTrigger ref={popoverRef} asChild>
                     <Button
@@ -624,6 +629,13 @@ export default function StayDetail() {
               <Button onClick={
                 async () => {
                   if (range[0].status) {
+                    if(!isValidAgeList) {
+                      toast({
+                        title: "At least one person must be greater than or equal to 18 years ago!",
+                        variant: "destructive"
+                      })
+                      return;
+                    }
                     if (isValidIdProof || isValidPersonalDetail) {
                       handlePayment()
                       return;
@@ -889,6 +901,8 @@ export default function StayDetail() {
                   <Button className="text-primary"
                     type='submit'
                     variant="ghost">Save</Button>
+                     <h1 className={` ${cn({hidden: isValidAgeList}, "text-destructive")} "mt-8 ms-4 text-sm"`}>
+                       At least one person must be greater than or equal to 18 years ago</h1>
                 </div>
               </div>
             </form>

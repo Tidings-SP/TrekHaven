@@ -200,13 +200,18 @@ export default function Register() {
             });
 
     }
-
+   
 
     return (
-        <main className="bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center min-h-screen">
+        <main className="flex items-center justify-center">
 
-            <div className='' >
-                <Card className="w-[450px] m-10">
+            <div className="bg-[url('/img/Login.jpg')] min-w-full"  >
+                <div className="backdrop-brightness-50 p-10">
+
+
+
+                
+                <Card className="w-[300px] sm:w-[450px] ">
                     <CardHeader>
                         <CardTitle>Register</CardTitle>
                         <CardDescription>Find the best Accommodation here!
@@ -477,14 +482,15 @@ export default function Register() {
                     </CardContent>
                 </Card>
                 <Toaster />
-            </div>
+            
 
             <div className="absolute top-0 right-0 m-4">
                 <Button className="float-right" variant={"link"} type="button"
                     onClick={() => router.push("/authentication/signin")}
                 >← Login</Button>
             </div>
-
+            </div>
+            </div>
         </main>
 
 

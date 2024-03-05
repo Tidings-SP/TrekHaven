@@ -67,9 +67,9 @@ export default function ForgotPassword() {
   }
 
   return (
-    <main>
-      <div className='min-h-screen'>
-        <Card className="w-[350px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+    <main className="bg-[url('/img/Forgot.jpg')]">
+      <div className='flex min-h-screen items-center backdrop-brightness-50 ps-3 sm:ps-10'>
+        <Card className="w-[350px] absolute">
           <CardHeader>
             <CardTitle>Forgot Password</CardTitle>
             <CardDescription>Get reset password link on your mail!</CardDescription>
