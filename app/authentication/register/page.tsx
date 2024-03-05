@@ -100,7 +100,7 @@ export default function Register() {
     const confirmPassword = form.watch("confirmPassword", "");
 
     useEffect(() => {
-        if (password !== confirmPassword && form.getFieldState("confirmPassword").isDirty) {
+        if (password !== confirmPassword) {
             // Set error if passwords don't match
             form.setError("confirmPassword", {
                 type: "manual",

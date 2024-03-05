@@ -89,15 +89,12 @@ export const registerSchema = z.object({
         /\d/.test(password) &&
         /[!@#$%^&*()_+[\]{};':"\\|,.<>/?]+/.test(password);
     }, { message: "The password should contain both upper case and lower case and atleast a digit, special charter " }),
-  confirmPassword: z.string().min(8).max(50),
+  confirmPassword: z.string(),
   dob: z.string()
     .refine(isDateOfBirthValid, {
       message: "Date of birth must be greater than or equal to 18 years ago",
     }),
-    dobId: z.string()
-    .refine(isDateOfBirthPositive, {
-      message: "Date of birth must be positive",
-    }),
+   
   pincode: z.string().min(6).max(6),
   area: z
     .string({
