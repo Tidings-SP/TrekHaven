@@ -70,11 +70,13 @@ const displayFormSchema = z.object({
   ,
   price: z
     .any()
-    .refine((p) => p >= 100, `Price should be minimum of 100`),
+    .refine((p) => p >= 100, `Price should be minimum of 100`)
+    .refine((p) => p <= 1000000, `Price should be less than of 1000000`),
 
   roomcount: z
     .any()
-    .refine((p) => p >= 1, `Room count should be minimum of 1`),
+    .refine((p) => p >= 1, `Room count should be minimum of 1`)
+    .refine((p) => p <= 100, `Room count should be less than of 100`),
 
 })
 
@@ -306,7 +308,21 @@ export function FeaturesForm() {
             <FormItem>
               <FormLabel>Room Count</FormLabel>
               <FormControl>
-                <Input placeholder="6..." {...field} />
+                <Input 
+                 onKeyDown={(event) => {
+                  const inputElement = event.target as HTMLInputElement;
+                  const key = event.key;
+
+                  // Allow backspace (keyCode 8) and only digits if the limit is not reached
+                  if (
+                      (key === "Backspace" || /^\d$/.test(key))
+                  ) {
+                      return; // Allow the keypress
+                  }
+
+                  event.preventDefault(); // Prevent other keypresses
+              }}
+                placeholder="6..." {...field} />
               </FormControl>
 
               <FormMessage />
@@ -321,7 +337,21 @@ export function FeaturesForm() {
             <FormItem>
               <FormLabel>Price Per Room</FormLabel>
               <FormControl>
-                <Input placeholder="100..." {...field} />
+                <Input
+                 onKeyDown={(event) => {
+                  const inputElement = event.target as HTMLInputElement;
+                  const key = event.key;
+
+                  // Allow backspace (keyCode 8) and only digits if the limit is not reached
+                  if (
+                      (key === "Backspace" || /^\d$/.test(key))
+                  ) {
+                      return; // Allow the keypress
+                  }
+
+                  event.preventDefault(); // Prevent other keypresses
+              }}
+                placeholder="100..." {...field} />
               </FormControl>
 
               <FormMessage />

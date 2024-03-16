@@ -35,6 +35,8 @@ import { z } from 'zod';
 import { registerSchema } from '@/app/validators/auth-validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { personalDetailSchema } from '@/app/validators/personal-detail-validator';
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { Agent } from 'http';
 
 
 type Stay = {
@@ -100,6 +102,7 @@ export default function StayDetail() {
   const [imgRef, setImgRef] = useState<string[]>([])
   const [IdName, setIdName] = useState<string[]>([])
   const [IdDob, setIdDob] = useState<string[]>([])
+  const [proceedToPayment, setProceedToPayment] = useState(false);
 
   const [uid, setUid] = useState<string>()
   const [uname, setUname] = useState<string>()
@@ -423,7 +426,7 @@ export default function StayDetail() {
     return true;
   };
 
-const[ isValidAgeList, setIsValidAgeList] = useState(false);
+  const [isValidAgeList, setIsValidAgeList] = useState(false);
   const [isId, setIsId] = useState(false); // true:ID, false:PersonalDetails
 
   interface IdProof {
@@ -530,9 +533,10 @@ const[ isValidAgeList, setIsValidAgeList] = useState(false);
     data.personalDetails.forEach((i: any) => setIdName((prev) => [...prev, i.name]))
     data.personalDetails.forEach((i: any) => setIdDob((prev) => [...prev, i.age]))
     data.personalDetails.forEach((i: any) => setIdPhone((prev) => [...prev, i.mobileNumber]))
-    
+
     setIsValidPersonalDetail(true);
   }
+
 
   const [yourAge, setYourAge] = useState<number | null>(null); // Initialize age state
 
@@ -541,28 +545,42 @@ const[ isValidAgeList, setIsValidAgeList] = useState(false);
 
   }, [IdDob])
 
+  useEffect(() => {
+    if (range[0].status && isValidAgeList && (isValidIdProof || isValidPersonalDetail)) setProceedToPayment(true)
+    else setProceedToPayment(false)
+  }, [isValidAgeList, isValidIdProof, isValidPersonalDetail, range])
+
   function calculateAge(dob: any) {
     const dobDate = new Date(dob);
     const today = new Date();
-    
+
     let age = today.getFullYear() - dobDate.getFullYear();
     const monthDiff = today.getMonth() - dobDate.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
       age--;
     }
-    
+
     return age;
   }
   return (
     <>
       <div className='flex flex-col justify-between lg:flex-row gap-16 lg:items-center p-5'>
-        <div className='flex flex-col gap-6 lg:w-2/4'>
+        <div className='flex flex-col mb-auto gap-6 lg:w-2/4'>
           <Image src={(stay) ? stay.ref : "/"}
             width={500}
             height={500}
             alt="Image by publisher" className='w-full h-full aspect-square object-cover rounded-xl' />
-
+          <div className="m-10 p-4">
+            <h1 className="text-primary text-lg">What we offer!!</h1>
+            {stay && stay.items ? (
+              stay.items.map((i) => (
+                <li key={i}>
+                  {i}
+                </li>
+              ))
+            ) : null}
+          </div>
         </div>
         {/* ABOUT */}
         <div className='flex flex-col gap-4 lg:w-2/4'>
@@ -581,9 +599,7 @@ const[ isValidAgeList, setIsValidAgeList] = useState(false);
 
             <div className='flex flex-row items-center'>
               <div className={cn("grid gap-2")}>
-                <div>
-                  <Input type='time' step="1800"></Input>
-                </div>
+
                 <Popover >
                   <PopoverTrigger ref={popoverRef} asChild>
                     <Button
@@ -626,40 +642,94 @@ const[ isValidAgeList, setIsValidAgeList] = useState(false);
               </div>
             </div>
             <div className="flex flex-col gap-2 items-center">
-              <Button onClick={
-                async () => {
-                  if (range[0].status) {
-                    if(!isValidAgeList) {
-                      toast({
-                        title: "At least one person must be greater than or equal to 18 years ago!",
-                        variant: "destructive"
-                      })
-                      return;
-                    }
-                    if (isValidIdProof || isValidPersonalDetail) {
-                      handlePayment()
-                      return;
-                    }
-                    toast({
-                      title: "Please add you Id proof or personal detail & press save to continue...",
-                      variant: "destructive"
-                    })
+              <Drawer>
+
+                <Button
+                  asChild={proceedToPayment}
+                  onClick={
+                    async () => {
+                      if (range[0].status) {
+
+                        if (isValidAgeList && (isValidIdProof || isValidPersonalDetail)) {
+                          setProceedToPayment(true)
+                          // handlePayment()
+                          return;
+                        }
+                        if (!isValidPersonalDetail) {
+                          toast({
+                            title: "Please add you Id proof or personal detail & press save to continue...",
+                            variant: "destructive"
+                          })
+                          return;
+                        }
 
 
-                  } else {
-                    toast({
-                      title: "Please pick a date!",
-                      variant: "destructive"
-                    })
+                        if (!isValidAgeList) {
+                          toast({
+                            title: "At least one person must be greater than or equal to 18 years ago!",
+                            variant: "destructive"
+                          })
+                          return;
+                        }
+
+
+                      } else {
+                        toast({
+                          title: "Please pick a date!",
+                          variant: "destructive"
+                        })
+                      }
+                    }
+                  } className=' text-white font-semibold py-3 px-16 rounded-xl h-full'>
+
+                  {proceedToPayment ?
+                    <DrawerTrigger>Book Now</DrawerTrigger>
+                    :
+                    "Book Now"
                   }
-                }
-              } className=' text-white font-semibold py-3 px-16 rounded-xl h-full'>Book Now</Button>
-              <h1 className="text-primary ">Total Price: ₹{amount * (stay ? stay.price : 0)}</h1>
+                </Button>
 
+                <DrawerContent>
+                  <DrawerHeader>
+                    <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+                    <DrawerDescription>Check your details and proceed to pay.</DrawerDescription>
+                  </DrawerHeader>
+                  <div className='flex p-2 mx-10'>
+                    <div className='flex flex-col gap-2'>
+                      <h1 className='text-lg font-medium'>Stay Name: {stay?.name}</h1>
+                      <h1 className='text-lg font-medium'>Booking Date: {format(range[0].startDate, "LLL dd, y")} - {format(range[0].endDate, "LLL dd, y")}</h1>
+                      <h1 className='text-lg font-medium'>Price: <span className='text-primary'>₹{amount * (stay ? stay.price : 0)}</span></h1>
+                      <div className='flex flex-wrap gap-6 mt-4' >
+                      {IdName.map((name, index) => (
+                        
+                          <div className='flex flex-col' key={index}>
+                          <h1 className='text-lg font-medium text-primary'>Guest: {index+1}</h1>
+                      <h1 className='font-medium'>Name: {name}</h1>
+                      <h1 className='font-medium'>DOB: {IdDob[index]}<span className='text-primary'> Age: {calculateAge(IdDob[index])}</span></h1>
+                      <h1 className='font-medium'>Ph No: {IdPhone[index]}</h1>
+                         
+                        </div>
+                        
+                      ))}
+                        </div>
+
+                    </div>
+
+                  </div>
+                  <DrawerFooter>
+                    <Button onClick={() => handlePayment()}>Proceed to Pay</Button>
+                    <DrawerClose onClick={() => setProceedToPayment(false)}>
+                      <Button variant="outline">Cancel</Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
+              <h1 className="text-primary ">Total Price: ₹{amount * (stay ? stay.price : 0)}</h1>
             </div>
           </div>
           {/* Id Proof */}
           <div className={`w-[53%] ${cn({ hidden: !isId })}`}>
+
             <Button variant={'outline'} onClick={() => {
               setIsId(false)
               setIsValidPersonalDetail(false)
@@ -668,7 +738,8 @@ const[ isValidAgeList, setIsValidAgeList] = useState(false);
               setIdName([])
               setIdDob([])
               setIdPhone([])
-              }}>Upload Aadhaar instead of Personal Details</Button>
+            }}>Upload Personal Details instead of Aadhaar</Button>
+
             <form onSubmit={handleSubmit(onIdSubmit)}>
               <Label>Upload your Aadhaar</Label>
               <div className="space-y-2">
@@ -769,7 +840,8 @@ const[ isValidAgeList, setIsValidAgeList] = useState(false);
 
           {/* Personal Details */}
           <div className={`w-[53%] ${cn({ hidden: isId })}`}>
-            <Button variant={'outline'} onClick={() => {
+
+            {/* <Button variant={'outline'} onClick={() => {
               setIsId(true)
               setIsValidPersonalDetail(false)
               setIsValidIdProof(false)
@@ -778,7 +850,7 @@ const[ isValidAgeList, setIsValidAgeList] = useState(false);
               setIdDob([])
               setIdPhone([])
 
-            }}>Upload Aadhaar instead of Personal Details</Button>
+            }}>Upload Aadhaar instead of Personal Details</Button> */}
 
             <Label>Upload your Personal Details</Label>
             <form onSubmit={personalDetailsSubmit(onPersonalDetailSubmit)}>
@@ -901,8 +973,8 @@ const[ isValidAgeList, setIsValidAgeList] = useState(false);
                   <Button className="text-primary"
                     type='submit'
                     variant="ghost">Save</Button>
-                     <h1 className={` ${cn({hidden: isValidAgeList}, "text-destructive")} "mt-8 ms-4 text-sm"`}>
-                       At least one person must be greater than or equal to 18 years ago</h1>
+                  <h1 className={` ${cn({ hidden: isValidAgeList }, "text-destructive")} "mt-8 ms-4 text-sm"`}>
+                    At least one person must be greater than or equal to 18 years ago</h1>
                 </div>
               </div>
             </form>
@@ -929,21 +1001,12 @@ const[ isValidAgeList, setIsValidAgeList] = useState(false);
 
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2">
+      <div className="flex justify-center">
 
         {/* Reviews & Ratings*/}
         {id && <RatingsFragment hid={id} />}
 
-        <div className="m-10 p-4">
-          <h1 className="text-primary text-lg">What we offer!!</h1>
-          {stay && stay.items ? (
-            stay.items.map((i) => (
-              <li key={i}>
-                {i}
-              </li>
-            ))
-          ) : null}
-        </div>
+
       </div>
       <Toaster />
     </>

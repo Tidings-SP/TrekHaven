@@ -53,7 +53,7 @@ export default function ForgotPassword() {
       .then(() => { 
         toast(
             {
-                title: "Check your registered mail to reset your password!!...",
+                title: "Check your registered mail, You will only get reset link if you already have an account!",
             }
         )
          })

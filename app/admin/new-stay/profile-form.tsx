@@ -33,9 +33,35 @@ const profileFormSchema = z.object({
     })
     .max(60, {
       message: "name must not be longer than 60 characters.",
-    }),
+    }).refine((name) => {
+      // Check if the same character is repeated consecutively
+      let isConsecutive = true;
+      for (let i = 1; i < name.length; i++) {
+        if (name[i] != name[i - 1]) {
+          return true;
+        }
+      }
+      return false;
+    }, { message: "Name should not contain consecutive repeating characters." })
+    .refine((name) => {
+      // Check if the string starts with a space
+      return !name.startsWith(" ");
+    }, { message: "Name must not start with a space." }),
 
-  bio: z.string().max(260).min(4),
+  bio: z.string().max(260).min(4).refine((name) => {
+    // Check if the same character is repeated consecutively
+    let isConsecutive = true;
+    for (let i = 1; i < name.length; i++) {
+      if (name[i] != name[i - 1]) {
+        return true;
+      }
+    }
+    return false;
+  }, { message: "Description should not contain consecutive repeating characters." })
+  .refine((name) => {
+    // Check if the string starts with a space
+    return !name.startsWith(" ");
+  }, { message: "Description must not start with a space." }),
 
 })
 type ProfileFormValues = z.infer<typeof profileFormSchema>
@@ -198,7 +224,28 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Display Name</FormLabel>
               <FormControl>
-                <Input placeholder="Cottage in MD"  {...field} />
+                <Input 
+                onKeyDown={(event) => {
+                  const inputElement = event.target as HTMLInputElement;
+                  const key = event.key;
+
+                  if (inputElement.selectionStart) {
+                    const prevChar = inputElement.value[inputElement.selectionStart - 1];
+                    const nextChar = inputElement.value[inputElement.selectionStart];
+                    if (key === " " && (prevChar === " " || nextChar === " ")) {
+                      event.preventDefault();
+                    }
+                  }
+                  // Allow arrow keys and backspace
+                  if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown" || key === "Backspace") {
+                    return;
+                  }
+                  // Only allow alphabetical characters and single spaces
+                  if (!/^[a-zA-Z\s\d~`!@#$%^&*()-_=+{}\[\]|\\;:'",<.>/?]+$/.test(key)) {
+                    event.preventDefault();
+                  }
+                }}
+                placeholder="Cottage in MD"  {...field} />
               </FormControl>
               <FormDescription>
                 This is your stay&apos;s public display name.

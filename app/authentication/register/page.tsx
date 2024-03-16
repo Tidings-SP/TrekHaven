@@ -100,6 +100,7 @@ export default function Register() {
     const confirmPassword = form.watch("confirmPassword", "");
 
     useEffect(() => {
+        console.log(password + ":" + confirmPassword)
         if (password !== confirmPassword) {
             // Set error if passwords don't match
             form.setError("confirmPassword", {
@@ -230,7 +231,7 @@ export default function Register() {
                                         name="name"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Name</FormLabel>
+                                                <FormLabel className="text-neutral">Name</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         onKeyDown={(event) => {
@@ -265,7 +266,7 @@ export default function Register() {
                                         name="email"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Email</FormLabel>
+                                                <FormLabel className="text-neutral">Email</FormLabel>
                                                 <FormControl>
                                                     <Input placeholder="Enter your email..." {...field} />
                                                 </FormControl>
@@ -279,7 +280,7 @@ export default function Register() {
                                         name="phone"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Phone Number</FormLabel>
+                                                <FormLabel className="text-neutral">Phone Number</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         type="number"
@@ -316,7 +317,7 @@ export default function Register() {
                                         name="password"
                                         render={({ field }) => (
                                             <FormItem >
-                                                <FormLabel>New Password</FormLabel>
+                                                <FormLabel className="text-neutral">New Password</FormLabel>
                                                 <FormControl>
                                                     <Input placeholder="Enter your password..." type="password" tabIndex={-1} {...field} />
                                                 </FormControl>
@@ -330,7 +331,7 @@ export default function Register() {
                                         name="confirmPassword"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Confirm Password</FormLabel>
+                                                <FormLabel className="text-neutral">Confirm Password</FormLabel>
                                                 <FormControl>
                                                     <Input placeholder="Please verify your password..." type="password" tabIndex={-1} {...field} />
                                                 </FormControl>
@@ -346,7 +347,7 @@ export default function Register() {
                                             name="dob"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>DOB</FormLabel>
+                                                    <FormLabel className="text-neutral">DOB</FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             type="date"
@@ -375,7 +376,7 @@ export default function Register() {
                                             name="pincode"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Pin Code</FormLabel>
+                                                    <FormLabel className="text-neutral">Pin Code</FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             tabIndex={-1}
@@ -414,7 +415,7 @@ export default function Register() {
                                             name="doorno"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Door Number</FormLabel>
+                                                    <FormLabel className="text-neutral">Door Number</FormLabel>
                                                     <FormControl>
                                                         <Input placeholder="Door no..." tabIndex={-1} {...field} />
                                                     </FormControl>
@@ -431,7 +432,7 @@ export default function Register() {
                                             name="street"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Street</FormLabel>
+                                                    <FormLabel className="text-neutral">Street</FormLabel>
                                                     <FormControl>
                                                         <Input placeholder="street addr..." tabIndex={-1} {...field} />
                                                     </FormControl>
@@ -449,7 +450,7 @@ export default function Register() {
                                         name="area"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Area</FormLabel>
+                                                <FormLabel className="text-neutral">Area</FormLabel>
                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                     <FormControl>
                                                         <SelectTrigger tabIndex={-1}>
